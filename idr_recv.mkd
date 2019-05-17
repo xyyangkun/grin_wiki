@@ -1,0 +1,158 @@
+NEC格式红外遥控信号接收
+
+本人工作中之后要用到红外遥控，虽然硬件中集成了红外接收知识，但是出于学习目的，编程接收红外信号。
+
+# 红外知识学习
+
+在接收红外信号前，首先要了解红外信号的调试方式，为编程接收红外信号作准备。
+
+参考：
+
+[红外遥控接收发射原理及ESP8266实现](https://blog.csdn.net/flyingcys/article/details/78922588)	
+
+# STM32接收红外信号
+
+本人手里刚好有stm32单片机，stm32有丰富的资料，详细的资料，决定通过stm32编程接收红外信号
+
+stm32单片机购买地址：
+
+[STM32F103C8T6小系统板 单片机 核心板 STM32初级入门学习开发板](https://item.taobao.com/item.htm?spm=a1z09.2.0.0.7a1c2e8dZz1QRz&id=551927199155&_u=k1v61smfab7)
+
+红外地址：
+
+[单片机 红外遥控模块+接收头HX1838+NEC编码红外 遥控器3件套](https://detail.tmall.com/item.htm?id=553467229979&spm=a1z09.2.0.0.7a1c2e8dZz1QRz&_u=k1v61smcde0)
+
+
+
+## stm32 使用stm32cube接收红外遥控信号
+
+首先选型，我用的是STM32F103C8T6，我用的st link调试，所以SYS中选择“Serial Wire”（要不然下载后，无法再用st link下载，必需长按复位键）。
+
+以下是使用stm32cube的设置 
+
+### ping out设置：
+
+RCC设置，设置系统时钟为外置输入：
+
+![RCC设置](.\img\stm32_rcc.png)
+
+系统设置，设置调试方式为st link：
+
+
+
+![系统设置](.\img\stm32_sys.png)
+
+TIM2设置，这个主要是通过计数方式获取下降延时间差：
+
+![TIM2设置](.\img\stm32_tim2.png)
+
+USART设置，这个是设置高度串口，输入输出调试信息：
+
+![USART设置](.\img\stm32_usart1.png)
+
+Clock Configuration:
+
+时钟设置：
+
+![时钟设置](.\img\stm32_clock.png)
+
+### configuration
+
+USART1设置，使用默认配置就可以
+
+
+
+NVIC Configuration:
+
+![NVIC Configuration](.\img\stm32_nvic_configuration.png)
+
+tim2 config  Tim2配置，分频7199,所以100us计数一次，捕获下降沿，测量两个下降沿的宽度 :
+
+![param setting](.\img\stm32_tim2_config_param.png)
+
+![tim2 nvic setting](.\img\stm32_tim2_nvic_setting.png)
+
+
+
+以上stm32cute设置完成，可以生成代码。
+
+## 使用keil调用函数接收代码：
+
+main.c中修改:
+
+```
+/* USER CODE BEGIN PV */
+/* Private variables ---------------------------------------------------------*/
+/// 全局变量
+uint8_t ir[4], flag, lianfa, xx;
+/* USER CODE END PV */
+...
+
+/* USER CODE BEGIN 0 */
+/// cat be use printf scanf
+int fputc(int ch, FILE *f)
+{
+	HAL_UART_Transmit(&huart1, (uint8_t *)&ch,1, 0xFFFF);
+	return ch;
+}
+int fgetc(FILE *f)
+{
+  uint8_t  ch;
+	HAL_UART_Receive(&huart1,(uint8_t *)&ch, 1, 0xFFFF);
+	return  ch;
+}
+/* USER CODE END 0 */
+
+....
+main函数中设置
+  /* USER CODE BEGIN 2 */
+	HAL_TIM_Base_Start_IT(&htim2);
+	if (HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2) != HAL_OK)
+	{
+		printf("IC Start it error\n");
+		Error_Handler();
+	}
+  /* USER CODE END 2 */
+  
+  
+```
+
+stm32f1xx_it.c
+
+```
+/* USER CODE BEGIN 0 */
+extern uint8_t ir[4], flag, lianfa, xx;
+uint32_t count[33]; // user for debug
+/* USER CODE END 0 */
+...
+
+//TIM2_IRQHandler中添加：
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+	//printf("debug000:%#X, ccr2:%#x\n", TIM2->SR, TIM2->SR);
+	if (4&TIM2->SR)
+	{
+		uint32_t bu;
+		//printf("=>%d\n", TIM2->CCR2);
+		bu = TIM2->CCR2;
+		if(bu<140&bu>128){xx = 0; count[xx]=bu;}
+		else if(bu>6&bu<15) {ir[xx/8]>>=1;xx++;count[xx]=bu;}
+		else if(bu>18&bu<25){ir[xx/8]>>=1; ir[xx/8]|=0x80;xx++;count[xx]=bu;}
+		else if(bu>108&bu<116)
+		{
+			printf("lianfa\n");
+			lianfa=1;
+		}
+		if(xx==32)
+		{
+			int i;
+			for(i=0; i<33; i++)printf("%d\t", count[i]);
+			printf("recv data:%x %x %x %x\n", ir[0], ir[1], ir[2], ir[3]);
+			xx=0;
+			flag=1;
+		}
+		TIM2->CNT = 0;
+	}
+
+  /* USER CODE END TIM2_IRQn 0 */
+```
+

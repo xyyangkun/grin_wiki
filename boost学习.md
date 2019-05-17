@@ -1,0 +1,70 @@
+参考：
+
+[boost:asio库介绍]:http://f.dataguru.cn/thread-159637-1-1.html
+[boost::asio 之udp协议的使用]:https://blog.csdn.net/bojie5744/article/details/38305657
+[Boost Asio介绍--之一]:https://blog.csdn.net/ithiker/article/details/22153001
+[Boost.Asio基本原理]: https://blog.csdn.net/mmoaay/article/details/43759883
+[Boost.Asio C++ 网络编程]:https://mmoaay.gitbooks.io/boost-asio-cpp-network-programming-chinese/content/Chapter1.html
+[Boost官方参考]:https://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/overview.html
+[Boost中文学习]:http://zh.highscore.de/cpp/boost/
+
+
+
+# Boost.Asio简介
+
+Boost.Asio是一个轻量级的异步网络库，它有简洁，小巧，高效，有良好的可扩展性，支持高并发的IO处理，入门简单等诸多优点。  Boost.Asio在设计上采用和Ace相似的Proactor设计模式，同时内置了对多线程的支持，针对不同的平台，采用了最优的socket模型，可以说能发挥机器的较大并发处理能力。  同时在设计上，Asio在接口上也有良好的可扩展性，几乎每种设计元素都可以根据要求订制和扩充，可以进一步对模型进行抽象和建模来建立自己需要的开发平台。   asio的主要用途还是用于socket编程，本文就以一个tcp的daytimer服务为例简单的演示一下如何实现同步和异步的tcp socket编程。 
+
+
+
+安装依赖库
+
+```
+sudo apt-get install libboost-dev 
+```
+
+我把建议安装的软件包，都安装了
+
+# UDP
+
+udp接收的代码：
+
+```
+/*
+ * filename : udprecv.cpp
+ * build : g++ udprecv.cpp -lboost_system -lboost_filesystem -lboost_thread
+ * test  : nc -u connect_ip 2300
+ */
+#include <string>
+#include <boost/asio.hpp>
+using namespace std;
+using namespace boost::asio;
+int main(int argc, char* argv[])
+{
+    io_service my_io_service;
+    // ip::udp::endpoint local_endpoint(ip::address_v4::from_string("127.0.0.1"), 2300);//create  a local endpoint
+    ip::udp::endpoint local_endpoint(ip::address_v4::from_string("0.0.0.0"), 2300);//create  a local endpoint
+    ip::udp::endpoint remote_endpoint; //this enpoint is used to store the endponit from remote-computer
+    ip::udp::socket socket(my_io_service, local_endpoint);//create socket and bind the endpoint
+
+    char buffer[40000];
+    int nAdd = 0;
+
+    while (1)
+    {
+        memset(buffer, 0, 40000);//to initialize variables
+        nAdd++;
+        socket.receive_from(boost::asio::buffer(buffer, 40000), remote_endpoint);//receive data from  remote-computer
+        printf("recv %d   datapacket:%s\n",nAdd, buffer);
+        printf("from ip: %s port:%d\n",
+                remote_endpoint.address().to_string().c_str(), remote_endpoint.port());
+    }
+    return 0;
+}
+```
+
+
+
+
+
+
+

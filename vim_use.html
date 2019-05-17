@@ -1,0 +1,564 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<!--SyntaxHighlighter-->
+<script type="text/javascript" src="scripts/shCore.js"></script>
+<script type="text/javascript" src="scripts/shBrushPython.js"></script>
+<script type="text/javascript" src="scripts/shBrushJScript.js"></script>
+<link type="text/css" rel="stylesheet" href="styles/shCoreFadeToGrey.css"/>
+<script type="text/javascript">SyntaxHighlighter.all();</script>
+
+</head>
+
+
+<body>
+<div id="wrapper">
+
+<div id="header">
+    <p class="header_titleline">xy的分享空间</p>
+    <p class="header_subline"><a href="/index.html">首页</a></p>
+</div>
+
+
+ <!--if(title)-->
+
+<p>目录:</p>
+<div id="TOC">
+<ul>
+<li><a href="#vim使用">vim使用</a><ul>
+<li><a href="#首先要卸载系统自带的vim相关的软件">首先要卸载系统自带的vim相关的软件</a></li>
+<li><a href="#下载vim">下载vim</a></li>
+<li><a href="#安装编译vim依赖库">安装编译vim依赖库</a></li>
+<li><a href="#编译前配置vim">编译前配置vim</a></li>
+<li><a href="#编译安装vim">编译安装vim</a></li>
+<li><a href="#安装vundle">安装Vundle</a></li>
+<li><a href="#修改配置文件">修改配置文件</a></li>
+<li><a href="#安装youcompleteme">安装YouCompleteMe</a></li>
+<li><a href="#配置vim头文件路径">配置vim头文件路径</a><ul>
+<li><a href="#首先在.vimrc中添加如下配置">首先在.vimrc中添加如下配置</a></li>
+</ul></li>
+<li><a href="#使用vim">使用vim</a></li>
+</ul></li>
+</ul>
+</div>
+ <!--if(toc)-->
+
+<h1 id="vim使用">vim使用</h1>
+<p>编写时间：</p>
+<p>安装参考：</p>
+<p><a href="https://blog.csdn.net/qq_33505303/article/details/68131862?locationNum=15&amp;fps=1" class="uri">https://blog.csdn.net/qq_33505303/article/details/68131862?locationNum=15&amp;fps=1</a></p>
+<p><a href="http://www.cnblogs.com/Harley-Quinn/p/6418070.html" class="uri">http://www.cnblogs.com/Harley-Quinn/p/6418070.html</a></p>
+<p>使用参考：2018.4.14 9：49</p>
+<p><a href="https://ask.csdn.net/questions/222772" class="uri">https://ask.csdn.net/questions/222772</a></p>
+<p><a href="http://www.cnblogs.com/yongjiuzhizhen/p/4793498.html" class="uri">http://www.cnblogs.com/yongjiuzhizhen/p/4793498.html</a></p>
+<p><a href="https://ask.helplib.com/others/post_5107081" class="uri">https://ask.helplib.com/others/post_5107081</a></p>
+<p>​ 本人目前使用ubuntu16.04系统,以前使用vim编写代码，自动补全功能，语法检查功能很差劲，网上查询得矢YouCompleteMe使用clang技术很不错，于是决定使用YouCompleteMe。初步使用感觉还不错。本篇先介绍下YouCompleteMe的安装和与vim的使用。</p>
+<p>​ 编译的安装基本参考上面的连接中的</p>
+<p>由于系统自带的vim不支持，我们下载并编译最新vim8.0进行使用。</p>
+<h2 id="首先要卸载系统自带的vim相关的软件">首先要卸载系统自带的vim相关的软件</h2>
+<pre><code>sudo apt-get remove vim vim-runtime gvim vim-tiny vim-common vim-gui-common vim-nox</code></pre>
+<h2 id="下载vim">下载vim</h2>
+<pre class="https://codeload.github.com/vim/vim/tar.gz/v8.0.1704"><code>wget https://codeload.github.com/vim/vim/tar.gz/v8.0.1704</code></pre>
+<h2 id="安装编译vim依赖库">安装编译vim依赖库</h2>
+<pre><code>sudo apt-get install libpython-dev libpython3-dev liblua5.2-dev ruby2.3-dev libperl-dev</code></pre>
+<h2 id="编译前配置vim">编译前配置vim</h2>
+<pre><code>./configure --with-features=huge --enable-rubyinterp --enable-pythoninterp --with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu/ --enable-perlinterp --enable-gui=gtk2 --enable-cscope --prefix=/usr --enable-luainterp  --x-includes=/usr/include/x86_64-linux-gnu/ruby-2.3.0 </code></pre>
+<h2 id="编译安装vim">编译安装vim</h2>
+<pre><code>make VIMRUNTIMEDIR=/usr/share/vim/vim80 &amp;&amp; make install</code></pre>
+<h2 id="安装vundle">安装Vundle</h2>
+<p>为什么要先安装Vundle?Vundle是vim的一种插件，通过Vundle可以方便的安装安装vim的其它插件，就像你用ubuntu安装软件使用apt-get工具一样。下面会讲到怎么在Vundle中安装YouCompleteMe。</p>
+<pre><code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim  </code></pre>
+<h2 id="修改配置文件">修改配置文件</h2>
+<p>新建在linux的home目录下新建文件.vimrc，写入以下内容：</p>
+<pre><code>&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+
+set nocompatible              &quot; be iMproved, required
+filetype off                  &quot; required
+&quot;设置Vundle的运行路径并初始化
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+&quot; Vundle安装位置与插件路径不同时，需要Vundle插件的路径
+&quot;call vundle#begin(&#39;~/some/path/here&#39;)
+&quot;------------------要安装的插件不能写在此行前！------------------
+
+&quot;Vundle对自己的调用，不可删去
+Plugin &#39;VundleVim/Vundle.vim&#39;
+
+&quot;以下是所支持的各种不同格式的示例
+&quot;需要安装的插件应写在调用的vundle#begin和vundle#end之间
+
+&quot;如果插件托管在Github上，写在下方，只写作者名/项目名就行了
+
+Plugin &#39;Valloric/YouCompleteMe&#39;
+Plugin &#39;majutsushi/tagbar&#39;
+Plugin &#39;vim-syntastic/syntastic&#39;
+Plugin &#39;vim-airline/vim-airline-themes&#39;
+Plugin &#39;vim-airline/vim-airline&#39;
+
+&quot;如果插件来自vim-scripts(官方)，写插件名就行了
+&quot; Plugin &#39;L9&#39;
+
+&quot;如果Git仓库不在Github上，需要提供完整的链接
+&quot; Plugin &#39;git://git.wincent.com/command-t.git&#39;
+
+&quot;本地的插件需要提供文件路径
+&quot; Plugin &#39;file:///home/gmarik/path/to/plugin&#39;
+&quot;一定要确保插件就在提供路径的文件夹中(没有子文件夹，直接在这层目录下)
+
+&quot;运行时目录的路径
+&quot;Plugin &#39;rstacruz/sparkup&#39;, {&#39;rtp&#39;: &#39;vim/&#39;}
+
+&quot;避免插件间的命名冲突
+&quot;Plugin &#39;ascenator/L9&#39;, {&#39;name&#39;: &#39;newL9&#39;}
+
+&quot;------------------要安装的插件不能写在此行后！------------------
+call vundle#end()            &quot; required
+filetype plugin indent on    &quot; required
+&quot;要忽略插件缩进更改，请改用：
+&quot;filetype plugin on
+&quot;
+&quot; 安装插件的相关指令
+&quot;:PluginList            - 列出已安装插件
+&quot;:PluginInstall         - 安装新添加的插件;添加`!`或使用`:PluginUpdate`来更新已安装插件
+&quot;:PluginSearch xxx      - 寻找名字带有xxx的插件;添加`!`刷新本地缓存
+&quot;:PluginClean           - 删除已经从列表移除的插件;添加`!`静默卸载
+&quot;:h                     - 帮助和说明文档 
+&quot;Vundle的设置到此为止了
+&quot;</code></pre>
+<h2 id="安装youcompleteme">安装YouCompleteMe</h2>
+<p>由于上面配置文件中已经有配置了YouCompleteMe了。所以我们只要执行以下命令，就可以安装YouCompleteMe和其它插件了。</p>
+<pre><code>:PluginInstall  </code></pre>
+<h2 id="配置vim头文件路径">配置vim头文件路径</h2>
+<p>经过上面的的配置，你已可以基本使用YouCompleteMe了。比如编写一个简单的c++,你之前使用vim编写stl相关</p>
+<p>代码，基本不能使用自动补功能，现在试试补全的很准确，是不是感觉很神奇 ？？</p>
+<p>但是如果你有多个代码，多个头文件时，如果你不经过配置，是不是会提示没有定义的类型？</p>
+<p>YouCompleteMe已为我们提供了解决方法。</p>
+<h3 id="首先在.vimrc中添加如下配置">首先在.vimrc中添加如下配置</h3>
+<pre><code>&quot;YouCompleteMe 插件配置  
+let g:ycm_global_ycm_extra_conf=&#39;~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py&#39;  
+nnoremap &lt;leader&gt;jd :YcmCompleter GoToDefinitionElseDeclaration&lt;CR&gt;  
+let g:ycm_python_binary_path = &#39;/usr/bin/python3&#39;  
+nmap&lt;C-a&gt; :YcmCompleter FixIt&lt;CR&gt;  </code></pre>
+<p>这个配置有一项重要的配置项<code>ycm_global_ycm_extra_conf</code>,这个项指定的文件中可以添加头文件的路径。</p>
+<p>修改.ycm_extra_conf.py 在这个文件中添加以下路径：</p>
+<pre><code>&#39;-isystem&#39;,  
+&#39;/usr/include&#39;,  
+&#39;-isystem&#39;,  
+&#39;/usr/include/c++/5&#39;,  
+&#39;-isystem&#39;,  
+&#39;/usr/include&#39;,  
+&#39;/usr/include/x86_64-linux-gnu/c++&#39;,  </code></pre>
+<p>这个是一个比较完整的配置文件</p>
+<pre><code># This file is NOT licensed under the GPLv3, which is the license for the rest
+# of YouCompleteMe.
+#
+# Here&#39;s the license text for this file:
+#
+# This is free and unencumbered software released into the public domain.
+#
+# Anyone is free to copy, modify, publish, use, compile, sell, or
+# distribute this software, either in source code form or as a compiled
+# binary, for any purpose, commercial or non-commercial, and by any
+# means.
+#
+# In jurisdictions that recognize copyright laws, the author or authors
+# of this software dedicate any and all copyright interest in the
+# software to the public domain. We make this dedication for the benefit
+# of the public at large and to the detriment of our heirs and
+# successors. We intend this dedication to be an overt act of
+# relinquishment in perpetuity of all present and future rights to this
+# software under copyright law.
+#
+# THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# For more information, please refer to &lt;http://unlicense.org/&gt;
+
+import os
+import ycm_core
+
+# These are the compilation flags that will be used in case there&#39;s no
+# compilation database set (by default, one is not set).
+# CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
+flags = [
+&#39;-Wall&#39;,
+&#39;-Wextra&#39;,
+&#39;-Werror&#39;,
+&#39;-Wno-long-long&#39;,
+&#39;-Wno-variadic-macros&#39;,
+&#39;-fexceptions&#39;,
+&#39;-DNDEBUG&#39;,
+# You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
+# source code needs it.
+&#39;-DUSE_CLANG_COMPLETER&#39;,
+# THIS IS IMPORTANT! Without a &quot;-std=&lt;something&gt;&quot; flag, clang won&#39;t know which
+# language to use when compiling headers. So it will guess. Badly. So C++
+# headers will be compiled as C headers. You don&#39;t want that so ALWAYS specify
+# a &quot;-std=&lt;something&gt;&quot;.
+# For a C project, you would set this to something like &#39;c99&#39; instead of
+# &#39;c++11&#39;.
+&#39;-std=c++11&#39;,
+# ...and the same thing goes for the magic -x option which specifies the
+# language that the files to be compiled are written in. This is mostly
+# relevant for c++ headers.
+# For a C project, you would set this to &#39;c&#39; instead of &#39;c++&#39;.
+&#39;-x&#39;,
+&#39;c++&#39;,
+&#39;-isystem&#39;,
+&#39;../BoostParts&#39;,
+&#39;-isystem&#39;,
+# This path will only work on OS X, but extra paths that don&#39;t exist are not
+# harmful
+&#39;/System/Library/Frameworks/Python.framework/Headers&#39;,
+#&#39;-isystem&#39;,
+#&#39;../llvm/include&#39;,
+#&#39;-isystem&#39;,
+#&#39;../llvm/tools/clang/include&#39;,
+#&#39;-I&#39;,
+#&#39;.&#39;,
+#&#39;-I&#39;,
+#&#39;./ClangCompleter&#39;,
+#&#39;-isystem&#39;,
+#&#39;./tests/gmock/gtest&#39;,
+#&#39;-isystem&#39;,
+#&#39;./tests/gmock/gtest/include&#39;,
+#&#39;-isystem&#39;,
+#&#39;./tests/gmock&#39;,
+#&#39;-isystem&#39;,
+#&#39;./tests/gmock/include&#39;,
+ &#39;-isystem&#39;,
+ &#39;/usr/include&#39;,
+ &#39;-isystem&#39;,
+ &#39;/usr/include/c++/5.4.0&#39;,
+ &#39;-isystem&#39;,
+ &#39;/usr/include&#39;,
+ &#39;/usr/include/x86_64-linux-gnu/c++&#39;,
+]
+
+
+# Set this to the absolute path to the folder (NOT the file!) containing the
+# compile_commands.json file to use that instead of &#39;flags&#39;. See here for
+# more details: http://clang.llvm.org/docs/JSONCompilationDatabase.html
+#
+# You can get CMake to generate this file for you by adding:
+#   set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
+# to your CMakeLists.txt file.
+#
+# Most projects will NOT need to set this to anything; you can just change the
+# &#39;flags&#39; list of compilation flags. Notice that YCM itself uses that approach.
+compilation_database_folder = &#39;&#39;
+
+if os.path.exists( compilation_database_folder ):
+  database = ycm_core.CompilationDatabase( compilation_database_folder )
+else:
+  database = None
+
+SOURCE_EXTENSIONS = [ &#39;.cpp&#39;, &#39;.cxx&#39;, &#39;.cc&#39;, &#39;.c&#39;, &#39;.m&#39;, &#39;.mm&#39; ]
+
+def DirectoryOfThisScript():
+  return os.path.dirname( os.path.abspath( __file__ ) )
+
+
+def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
+  if not working_directory:
+    return list( flags )
+  new_flags = []
+  make_next_absolute = False
+  path_flags = [ &#39;-isystem&#39;, &#39;-I&#39;, &#39;-iquote&#39;, &#39;--sysroot=&#39; ]
+  for flag in flags:
+    new_flag = flag
+
+    if make_next_absolute:
+      make_next_absolute = False
+      if not flag.startswith( &#39;/&#39; ):
+        new_flag = os.path.join( working_directory, flag )
+
+    for path_flag in path_flags:
+      if flag == path_flag:
+        make_next_absolute = True
+        break
+
+      if flag.startswith( path_flag ):
+        path = flag[ len( path_flag ): ]
+        new_flag = path_flag + os.path.join( working_directory, path )
+        break
+
+    if new_flag:
+      new_flags.append( new_flag )
+  return new_flags
+
+
+def IsHeaderFile( filename ):
+  extension = os.path.splitext( filename )[ 1 ]
+  return extension in [ &#39;.h&#39;, &#39;.hxx&#39;, &#39;.hpp&#39;, &#39;.hh&#39; ]
+
+
+def GetCompilationInfoForFile( filename ):
+  # The compilation_commands.json file generated by CMake does not have entries
+  # for header files. So we do our best by asking the db for flags for a
+  # corresponding source file, if any. If one exists, the flags for that file
+  # should be good enough.
+  if IsHeaderFile( filename ):
+    basename = os.path.splitext( filename )[ 0 ]
+    for extension in SOURCE_EXTENSIONS:
+      replacement_file = basename + extension
+      if os.path.exists( replacement_file ):
+        compilation_info = database.GetCompilationInfoForFile(
+          replacement_file )
+        if compilation_info.compiler_flags_:
+          return compilation_info
+    return None
+  return database.GetCompilationInfoForFile( filename )
+
+
+def FlagsForFile( filename, **kwargs ):
+  if database:
+    # Bear in mind that compilation_info.compiler_flags_ does NOT return a
+    # python list, but a &quot;list-like&quot; StringVec object
+    compilation_info = GetCompilationInfoForFile( filename )
+    if not compilation_info:
+      return None
+
+    final_flags = MakeRelativePathsInFlagsAbsolute(
+      compilation_info.compiler_flags_,
+      compilation_info.compiler_working_dir_ )
+
+    # NOTE: This is just for YouCompleteMe; it&#39;s highly likely that your project
+    # does NOT need to remove the stdlib flag. DO NOT USE THIS IN YOUR
+    # ycm_extra_conf IF YOU&#39;RE NOT 100% SURE YOU NEED IT.
+    try:
+      final_flags.remove( &#39;-stdlib=libc++&#39; )
+    except ValueError:
+      pass
+  else:
+    relative_to = DirectoryOfThisScript()
+    final_flags = MakeRelativePathsInFlagsAbsolute( flags, relative_to )
+
+  return { &#39;flags&#39;: final_flags }</code></pre>
+<p>你也可以添加自已编写的的代码的头文件路径</p>
+<p>比如我添加的：</p>
+<div class="figure">
+<img src="./img/add_include.png" alt="add_include" />
+<p class="caption">add_include</p>
+</div>
+<h2 id="使用vim">使用vim</h2>
+<p>如果你配置没有问题你的vim已经可以初步使用了。我又添加了一些其它的功能</p>
+<p>有高亮显示，函数列表支持，添加头文件，添加文件头之类的。</p>
+<pre><code>&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+&quot; 以下为自定义的东西
+&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;&quot;
+&quot;文件使用utf8
+if v:lang =~ &quot;utf8$&quot; || v:lang =~ &quot;UTF-8$&quot;
+   set fileencodings=ucs-bom,utf-8,latin1
+endif
+&quot;添加颜色
+syntax on
+
+&quot;搜索时，忽略大小写
+set ignorecase
+&quot;add for status line
+set laststatus=2
+&quot; 打开状态栏标尺
+set ruler 
+&quot; 突出显示当前行， 当前列
+&quot; https://www.cnblogs.com/nklzj/p/6298421.html
+set cursorcolumn
+set cursorline
+&quot; 美化显示光标位置 （因为上面的效果是：当前行列是一条横线，）
+highlight CursorLine   cterm=NONE ctermbg=black ctermfg=green guibg=NONE guifg=NONE
+highlight CursorColumn cterm=NONE ctermbg=black ctermfg=green guibg=NONE guifg=NONE
+
+&quot; 启用高亮搜索选项
+&quot; https://www.cnblogs.com/jianyungsun/archive/2011/02/14/1954083.html
+&quot; https://blog.csdn.net/ariessurfer/article/details/8135775
+&quot; shift + &quot;*&quot;  向下查找并高亮显示
+&quot; shift + &quot;#&quot;  向上查找并高亮显示
+&quot; &quot;g&quot; + &quot;d&quot;    高亮显示光标所属单词，&quot;n&quot; 查找！
+set hlsearch
+&quot; 停用高亮搜索选项命令：nohl
+&quot; https://blog.csdn.net/shaoshaoh/article/details/1694451
+
+
+&quot; cscope 支持
+if has(&quot;cscope&quot;) &amp;&amp; filereadable(&quot;/usr/bin/cscope&quot;)
+   set csprg=/usr/bin/cscope
+   set csto=0
+   set cst
+   set nocsverb
+   &quot; add any database in current directory
+   if filereadable(&quot;cscope.out&quot;)
+      cs add cscope.out
+   &quot; else add database pointed to by environment
+   elseif $CSCOPE_DB != &quot;&quot;
+      cs add $CSCOPE_DB
+   endif
+   set csverb
+endif
+
+&quot;编辑规则
+filetype plugin on
+
+if &amp;term==&quot;xterm&quot;
+     set t_Co=8
+     set t_Sb=m
+     set t_Sf=m
+endif
+
+&quot; Don&#39;t wake up system with blinking cursor:
+&quot; http://www.linuxpowertop.org/known.php
+let &amp;guicursor = &amp;guicursor . &quot;,a:blinkon0&quot;
+set fileencodings=ucs-bom,utf-8,cp936
+set fileencoding=utf-8
+set encoding=utf-8
+set nu
+
+&quot; editor format
+set autoindent
+set tabstop=4
+set shiftwidth=4
+set backspace=2
+set incsearch
+set ruler
+
+set grepprg=grep\ -nH\ $*
+let g:tex_flavor = &quot;latex&quot; 
+
+&quot; bufExplorer
+let g:bufExplorerSplitBelow=1
+let g:bufExplorerSortBy=&#39;name&#39;
+let g:bufExplorerSplitHorzSize=12
+let g:bufExplorerUseCurrentWindow=1
+let g:bufExplorerSplitOutPathName=0
+
+&quot; ctags &amp; cscope options
+set tags=./tags,tags
+if has(&quot;cscope&quot;)
+    set csprg=/usr/bin/cscope
+    set csto=1
+    set cst
+    set cscopequickfix=s-,c-,d-,i-,t-,e-
+    set nocsverb
+    &quot; add any database in current directory
+    if filereadable(&quot;cscope.out&quot;)
+        cs add cscope.out
+    endif
+    set csverb
+endif
+
+&quot; key mappings for cscope
+nmap &lt;C-\&gt;s :cs find s &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;g :cs find g &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;c :cs find c &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;t :cs find t &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;e :cs find e &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;f :cs find f &lt;C-R&gt;=expand(&quot;&lt;cfile&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;i :cs find i &lt;C-R&gt;=expand(&quot;&lt;cfile&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+nmap &lt;C-\&gt;d :cs find d &lt;C-R&gt;=expand(&quot;&lt;cword&gt;&quot;)&lt;CR&gt;&lt;CR&gt; :cw&lt;CR&gt;
+
+&quot; nmap taglist
+nmap &lt;silent&gt; &lt;F8&gt; &lt;ESC&gt;:Tlist&lt;RETURN&gt;
+nmap &lt;silent&gt; &lt;F5&gt; &lt;ESC&gt;:TlistUpdate&lt;RETURN&gt;
+&quot; taglist options
+let Tlist_Inc_Winwidth=0
+let Tlist_Use_Right_Window=0
+let Tlist_File_Fold_Auto_Close=1
+
+&quot; txtbowser
+syntax on
+filetype plugin on
+au Bufread,BufNewFile *.txt setlocal ft=txt
+
+&quot;F7 insert curent date &amp; myname
+&quot;should use this in insert mode
+imap &lt;F7&gt; &lt;c-r&gt;=strftime(&quot;%Y-%m-%d %H:%M:%S yangkun&quot;)&lt;cr&gt;
+
+&quot;add for python 2014-05-15 11:54:09 zhaocq
+&quot;set filetype=python
+&quot;au BufNewFile,BufRead *.py,*.pyw setf python
+
+&quot; add for python complete 2014-05-15 12:00:28 zhaocq
+set ofu=syntaxcomplete#Complete
+&quot;use &#39;ctrl+x ctrx+o&#39; to complete, ctrl+n, next; ctrl+p, previous
+&quot;esc to remove the select box
+&quot;autocmd FileType python set omnifunc=pythoncomplete#Complete
+&quot;autocmd FileType python runtime! autoload/pythoncomplete.vim
+
+&quot; add for minibufexploer 2014-05-15 11:58:13 zhaocq
+let g:miniBufExplMapWindowNavVim = 1
+let g:miniBufExplMapWindowNavArrows = 1
+let g:miniBufExplMapCTabSwitchBufs = 1
+let g:miniBufExplModSelTarget = 1
+
+&quot; add for auto update ctags and cscope
+nmap &lt;F5&gt; :!find . -iname &#39;*.c&#39; -o -iname &#39;*.cpp&#39; -o -iname &#39;*.h&#39; -o -iname &#39;*.hpp&#39; &gt; cscope.files&lt;CR&gt;
+  \:!cscope -b -i cscope.files -f cscope.out&lt;CR&gt;
+  \:cs reset&lt;CR&gt;
+  \:!ctags -R&lt;CR&gt;
+
+
+set colorcolumn=80
+set ff=unix
+
+
+&quot; vim markdown config
+au BufRead,BufNewFile *.{md,mdown,mkd,mardown,mdwn} set filetype=mkd
+set nofoldenable
+
+
+&quot; 加入注释   
+func SetComment()  
+    call setline(1,&quot;/*================================================================&quot;)   
+    call append(line(&quot;.&quot;),   &quot;*   Copyright (C) &quot;.strftime(&quot;%Y&quot;).&quot; ZAGT Ltd. All rights reserved.&quot;)  
+    call append(line(&quot;.&quot;)+1, &quot;*   &quot;)   
+    call append(line(&quot;.&quot;)+2, &quot;*   Filename   : &quot;.expand(&quot;%:t&quot;))   
+    call append(line(&quot;.&quot;)+3, &quot;*   Author     : YangKun&quot;)  
+    call append(line(&quot;.&quot;)+4, &quot;*   Email      : xyyangkun@163.com&quot;)
+    call append(line(&quot;.&quot;)+5, &quot;*   Created    : &quot;.strftime(&quot;%Y.%m.%d&quot;))   
+    call append(line(&quot;.&quot;)+6, &quot;*   Description: &quot;)   
+    call append(line(&quot;.&quot;)+7, &quot;*&quot;)  
+    call append(line(&quot;.&quot;)+8, &quot;================================================================*/&quot;)   
+    call append(line(&quot;.&quot;)+9, &quot;&quot;)  
+    call append(line(&quot;.&quot;)+10, &quot;&quot;)  
+endfunc  
+  
+&quot; 加入shell,Makefile注释  
+func SetComment_sh()  
+    call setline(3, &quot;#================================================================&quot;)   
+    call setline(4, &quot;#   Copyright (C) &quot;.strftime(&quot;%Y&quot;).&quot; ZAGT Ltd. All rights reserved.&quot;)  
+    call setline(5, &quot;#   &quot;)   
+    call setline(6, &quot;#   Filename     : &quot;.expand(&quot;%:t&quot;))   
+    call setline(7, &quot;#   Author       : YangKun&quot;)  
+    call setline(8, &quot;#   Email        : xyyangkun@163.com&quot;)  
+    call setline(9, &quot;#   Created      : &quot;.strftime(&quot;%Y.%m.%d&quot;))   
+    call setline(10, &quot;#   Description : &quot;)   
+    call setline(11, &quot;#&quot;)  
+    call setline(12, &quot;#================================================================&quot;)  
+    call setline(13, &quot;&quot;)  
+    call setline(14, &quot;&quot;)  
+endfunc 
+</code></pre>
+
+<div id="footer">
+    <p class="footer_titleline">Human knowledge belongs to the world</p>
+    <p class="footer_subline">Contact: xyyangkun@163.com</p>
+    <p class="footer_subline">声明: 本站如有侵权行为请及时通知至以上邮箱</p>
+</div>
+</div> <!--wrapper-->
+</body>
+</html>

@@ -1,0 +1,574 @@
+# vim使用
+
+编写时间：
+
+安装参考：
+
+<https://blog.csdn.net/qq_33505303/article/details/68131862?locationNum=15&fps=1>
+
+<http://www.cnblogs.com/Harley-Quinn/p/6418070.html>
+
+使用参考：2018.4.14 9：49
+
+<https://ask.csdn.net/questions/222772>
+
+<http://www.cnblogs.com/yongjiuzhizhen/p/4793498.html>
+
+<https://ask.helplib.com/others/post_5107081>
+
+
+
+​        本人目前使用ubuntu16.04系统,以前使用vim编写代码，自动补全功能，语法检查功能很差劲，网上查询得矢YouCompleteMe使用clang技术很不错，于是决定使用YouCompleteMe。初步使用感觉还不错。本篇先介绍下YouCompleteMe的安装和与vim的使用。
+
+​       编译的安装基本参考上面的连接中的
+
+由于系统自带的vim不支持，我们下载并编译最新vim8.0进行使用。
+
+## 首先要卸载系统自带的vim相关的软件
+
+```
+sudo apt-get remove vim vim-runtime gvim vim-tiny vim-common vim-gui-common vim-nox
+```
+
+## 下载vim
+
+```https://codeload.github.com/vim/vim/tar.gz/v8.0.1704
+wget https://codeload.github.com/vim/vim/tar.gz/v8.0.1704
+```
+
+
+
+##安装编译vim依赖库
+
+```
+sudo apt-get install libpython-dev libpython3-dev liblua5.2-dev ruby2.3-dev libperl-dev
+```
+
+##编译前配置vim
+
+```
+./configure --with-features=huge --enable-rubyinterp --enable-pythoninterp --with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu/ --enable-perlinterp --enable-gui=gtk2 --enable-cscope --prefix=/usr --enable-luainterp  --x-includes=/usr/include/x86_64-linux-gnu/ruby-2.3.0 
+```
+
+## 编译安装vim
+
+```
+make VIMRUNTIMEDIR=/usr/share/vim/vim80 && make install
+```
+
+## 安装Vundle
+
+为什么要先安装Vundle?Vundle是vim的一种插件，通过Vundle可以方便的安装安装vim的其它插件，就像你用ubuntu安装软件使用apt-get工具一样。下面会讲到怎么在Vundle中安装YouCompleteMe。
+
+```
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim  
+```
+
+## 修改配置文件
+
+新建在linux的home目录下新建文件.vimrc，写入以下内容：
+
+```
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+set nocompatible              " be iMproved, required
+filetype off                  " required
+"设置Vundle的运行路径并初始化
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+" Vundle安装位置与插件路径不同时，需要Vundle插件的路径
+"call vundle#begin('~/some/path/here')
+"------------------要安装的插件不能写在此行前！------------------
+
+"Vundle对自己的调用，不可删去
+Plugin 'VundleVim/Vundle.vim'
+
+"以下是所支持的各种不同格式的示例
+"需要安装的插件应写在调用的vundle#begin和vundle#end之间
+
+"如果插件托管在Github上，写在下方，只写作者名/项目名就行了
+
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'majutsushi/tagbar'
+Plugin 'vim-syntastic/syntastic'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'vim-airline/vim-airline'
+
+"如果插件来自vim-scripts(官方)，写插件名就行了
+" Plugin 'L9'
+
+"如果Git仓库不在Github上，需要提供完整的链接
+" Plugin 'git://git.wincent.com/command-t.git'
+
+"本地的插件需要提供文件路径
+" Plugin 'file:///home/gmarik/path/to/plugin'
+"一定要确保插件就在提供路径的文件夹中(没有子文件夹，直接在这层目录下)
+
+"运行时目录的路径
+"Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
+
+"避免插件间的命名冲突
+"Plugin 'ascenator/L9', {'name': 'newL9'}
+
+"------------------要安装的插件不能写在此行后！------------------
+call vundle#end()            " required
+filetype plugin indent on    " required
+"要忽略插件缩进更改，请改用：
+"filetype plugin on
+"
+" 安装插件的相关指令
+":PluginList			- 列出已安装插件
+":PluginInstall			- 安装新添加的插件;添加`!`或使用`:PluginUpdate`来更新已安装插件
+":PluginSearch xxx		- 寻找名字带有xxx的插件;添加`!`刷新本地缓存
+":PluginClean			- 删除已经从列表移除的插件;添加`!`静默卸载
+":h						- 帮助和说明文档 
+"Vundle的设置到此为止了
+"
+```
+
+## 安装YouCompleteMe
+
+由于上面配置文件中已经有配置了YouCompleteMe了。所以我们只要执行以下命令，就可以安装YouCompleteMe和其它插件了。
+
+```
+:PluginInstall  
+```
+
+## 配置vim头文件路径
+
+经过上面的的配置，你已可以基本使用YouCompleteMe了。比如编写一个简单的c++,你之前使用vim编写stl相关
+
+代码，基本不能使用自动补功能，现在试试补全的很准确，是不是感觉很神奇 ？？
+
+但是如果你有多个代码，多个头文件时，如果你不经过配置，是不是会提示没有定义的类型？
+
+YouCompleteMe已为我们提供了解决方法。
+
+### 首先在.vimrc中添加如下配置
+
+```
+"YouCompleteMe 插件配置  
+let g:ycm_global_ycm_extra_conf='~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'  
+nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>  
+let g:ycm_python_binary_path = '/usr/bin/python3'  
+nmap<C-a> :YcmCompleter FixIt<CR>  
+```
+
+这个配置有一项重要的配置项`ycm_global_ycm_extra_conf`,这个项指定的文件中可以添加头文件的路径。
+
+修改.ycm_extra_conf.py 在这个文件中添加以下路径：
+
+```
+'-isystem',  
+'/usr/include',  
+'-isystem',  
+'/usr/include/c++/5',  
+'-isystem',  
+'/usr/include',  
+'/usr/include/x86_64-linux-gnu/c++',  
+```
+
+这个是一个比较完整的配置文件
+
+```
+# This file is NOT licensed under the GPLv3, which is the license for the rest
+# of YouCompleteMe.
+#
+# Here's the license text for this file:
+#
+# This is free and unencumbered software released into the public domain.
+#
+# Anyone is free to copy, modify, publish, use, compile, sell, or
+# distribute this software, either in source code form or as a compiled
+# binary, for any purpose, commercial or non-commercial, and by any
+# means.
+#
+# In jurisdictions that recognize copyright laws, the author or authors
+# of this software dedicate any and all copyright interest in the
+# software to the public domain. We make this dedication for the benefit
+# of the public at large and to the detriment of our heirs and
+# successors. We intend this dedication to be an overt act of
+# relinquishment in perpetuity of all present and future rights to this
+# software under copyright law.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# For more information, please refer to <http://unlicense.org/>
+
+import os
+import ycm_core
+
+# These are the compilation flags that will be used in case there's no
+# compilation database set (by default, one is not set).
+# CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
+flags = [
+'-Wall',
+'-Wextra',
+'-Werror',
+'-Wno-long-long',
+'-Wno-variadic-macros',
+'-fexceptions',
+'-DNDEBUG',
+# You 100% do NOT need -DUSE_CLANG_COMPLETER in your flags; only the YCM
+# source code needs it.
+'-DUSE_CLANG_COMPLETER',
+# THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
+# language to use when compiling headers. So it will guess. Badly. So C++
+# headers will be compiled as C headers. You don't want that so ALWAYS specify
+# a "-std=<something>".
+# For a C project, you would set this to something like 'c99' instead of
+# 'c++11'.
+'-std=c++11',
+# ...and the same thing goes for the magic -x option which specifies the
+# language that the files to be compiled are written in. This is mostly
+# relevant for c++ headers.
+# For a C project, you would set this to 'c' instead of 'c++'.
+'-x',
+'c++',
+'-isystem',
+'../BoostParts',
+'-isystem',
+# This path will only work on OS X, but extra paths that don't exist are not
+# harmful
+'/System/Library/Frameworks/Python.framework/Headers',
+#'-isystem',
+#'../llvm/include',
+#'-isystem',
+#'../llvm/tools/clang/include',
+#'-I',
+#'.',
+#'-I',
+#'./ClangCompleter',
+#'-isystem',
+#'./tests/gmock/gtest',
+#'-isystem',
+#'./tests/gmock/gtest/include',
+#'-isystem',
+#'./tests/gmock',
+#'-isystem',
+#'./tests/gmock/include',
+ '-isystem',
+ '/usr/include',
+ '-isystem',
+ '/usr/include/c++/5.4.0',
+ '-isystem',
+ '/usr/include',
+ '/usr/include/x86_64-linux-gnu/c++',
+]
+
+
+# Set this to the absolute path to the folder (NOT the file!) containing the
+# compile_commands.json file to use that instead of 'flags'. See here for
+# more details: http://clang.llvm.org/docs/JSONCompilationDatabase.html
+#
+# You can get CMake to generate this file for you by adding:
+#   set( CMAKE_EXPORT_COMPILE_COMMANDS 1 )
+# to your CMakeLists.txt file.
+#
+# Most projects will NOT need to set this to anything; you can just change the
+# 'flags' list of compilation flags. Notice that YCM itself uses that approach.
+compilation_database_folder = ''
+
+if os.path.exists( compilation_database_folder ):
+  database = ycm_core.CompilationDatabase( compilation_database_folder )
+else:
+  database = None
+
+SOURCE_EXTENSIONS = [ '.cpp', '.cxx', '.cc', '.c', '.m', '.mm' ]
+
+def DirectoryOfThisScript():
+  return os.path.dirname( os.path.abspath( __file__ ) )
+
+
+def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
+  if not working_directory:
+    return list( flags )
+  new_flags = []
+  make_next_absolute = False
+  path_flags = [ '-isystem', '-I', '-iquote', '--sysroot=' ]
+  for flag in flags:
+    new_flag = flag
+
+    if make_next_absolute:
+      make_next_absolute = False
+      if not flag.startswith( '/' ):
+        new_flag = os.path.join( working_directory, flag )
+
+    for path_flag in path_flags:
+      if flag == path_flag:
+        make_next_absolute = True
+        break
+
+      if flag.startswith( path_flag ):
+        path = flag[ len( path_flag ): ]
+        new_flag = path_flag + os.path.join( working_directory, path )
+        break
+
+    if new_flag:
+      new_flags.append( new_flag )
+  return new_flags
+
+
+def IsHeaderFile( filename ):
+  extension = os.path.splitext( filename )[ 1 ]
+  return extension in [ '.h', '.hxx', '.hpp', '.hh' ]
+
+
+def GetCompilationInfoForFile( filename ):
+  # The compilation_commands.json file generated by CMake does not have entries
+  # for header files. So we do our best by asking the db for flags for a
+  # corresponding source file, if any. If one exists, the flags for that file
+  # should be good enough.
+  if IsHeaderFile( filename ):
+    basename = os.path.splitext( filename )[ 0 ]
+    for extension in SOURCE_EXTENSIONS:
+      replacement_file = basename + extension
+      if os.path.exists( replacement_file ):
+        compilation_info = database.GetCompilationInfoForFile(
+          replacement_file )
+        if compilation_info.compiler_flags_:
+          return compilation_info
+    return None
+  return database.GetCompilationInfoForFile( filename )
+
+
+def FlagsForFile( filename, **kwargs ):
+  if database:
+    # Bear in mind that compilation_info.compiler_flags_ does NOT return a
+    # python list, but a "list-like" StringVec object
+    compilation_info = GetCompilationInfoForFile( filename )
+    if not compilation_info:
+      return None
+
+    final_flags = MakeRelativePathsInFlagsAbsolute(
+      compilation_info.compiler_flags_,
+      compilation_info.compiler_working_dir_ )
+
+    # NOTE: This is just for YouCompleteMe; it's highly likely that your project
+    # does NOT need to remove the stdlib flag. DO NOT USE THIS IN YOUR
+    # ycm_extra_conf IF YOU'RE NOT 100% SURE YOU NEED IT.
+    try:
+      final_flags.remove( '-stdlib=libc++' )
+    except ValueError:
+      pass
+  else:
+    relative_to = DirectoryOfThisScript()
+    final_flags = MakeRelativePathsInFlagsAbsolute( flags, relative_to )
+
+  return { 'flags': final_flags }
+```
+
+你也可以添加自已编写的的代码的头文件路径
+
+比如我添加的：
+
+![add_include](./img/add_include.png)
+
+## 使用vim
+
+如果你配置没有问题你的vim已经可以初步使用了。我又添加了一些其它的功能
+
+有高亮显示，函数列表支持，添加头文件，添加文件头之类的。
+
+```
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 以下为自定义的东西
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"文件使用utf8
+if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
+   set fileencodings=ucs-bom,utf-8,latin1
+endif
+"添加颜色
+syntax on
+
+"搜索时，忽略大小写
+set ignorecase
+"add for status line
+set laststatus=2
+" 打开状态栏标尺
+set ruler 
+" 突出显示当前行， 当前列
+" https://www.cnblogs.com/nklzj/p/6298421.html
+set cursorcolumn
+set cursorline
+" 美化显示光标位置 （因为上面的效果是：当前行列是一条横线，）
+highlight CursorLine   cterm=NONE ctermbg=black ctermfg=green guibg=NONE guifg=NONE
+highlight CursorColumn cterm=NONE ctermbg=black ctermfg=green guibg=NONE guifg=NONE
+
+" 启用高亮搜索选项
+" https://www.cnblogs.com/jianyungsun/archive/2011/02/14/1954083.html
+" https://blog.csdn.net/ariessurfer/article/details/8135775
+" shift + "*"  向下查找并高亮显示
+" shift + "#"  向上查找并高亮显示
+" "g" + "d"    高亮显示光标所属单词，"n" 查找！
+set hlsearch
+" 停用高亮搜索选项命令：nohl
+" https://blog.csdn.net/shaoshaoh/article/details/1694451
+
+
+" cscope 支持
+if has("cscope") && filereadable("/usr/bin/cscope")
+   set csprg=/usr/bin/cscope
+   set csto=0
+   set cst
+   set nocsverb
+   " add any database in current directory
+   if filereadable("cscope.out")
+      cs add cscope.out
+   " else add database pointed to by environment
+   elseif $CSCOPE_DB != ""
+      cs add $CSCOPE_DB
+   endif
+   set csverb
+endif
+
+"编辑规则
+filetype plugin on
+
+if &term=="xterm"
+     set t_Co=8
+     set t_Sb=m
+     set t_Sf=m
+endif
+
+" Don't wake up system with blinking cursor:
+" http://www.linuxpowertop.org/known.php
+let &guicursor = &guicursor . ",a:blinkon0"
+set fileencodings=ucs-bom,utf-8,cp936
+set fileencoding=utf-8
+set encoding=utf-8
+set nu
+
+" editor format
+set autoindent
+set tabstop=4
+set shiftwidth=4
+set backspace=2
+set incsearch
+set ruler
+
+set grepprg=grep\ -nH\ $*
+let g:tex_flavor = "latex" 
+
+" bufExplorer
+let g:bufExplorerSplitBelow=1
+let g:bufExplorerSortBy='name'
+let g:bufExplorerSplitHorzSize=12
+let g:bufExplorerUseCurrentWindow=1
+let g:bufExplorerSplitOutPathName=0
+
+" ctags & cscope options
+set tags=./tags,tags
+if has("cscope")
+	set csprg=/usr/bin/cscope
+	set csto=1
+	set cst
+	set cscopequickfix=s-,c-,d-,i-,t-,e-
+	set nocsverb
+	" add any database in current directory
+	if filereadable("cscope.out")
+		cs add cscope.out
+	endif
+	set csverb
+endif
+
+" key mappings for cscope
+nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR> :cw<CR>
+nmap <C-\>i :cs find i <C-R>=expand("<cfile>")<CR><CR> :cw<CR>
+nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR> :cw<CR>
+
+" nmap taglist
+nmap <silent> <F8> <ESC>:Tlist<RETURN>
+nmap <silent> <F5> <ESC>:TlistUpdate<RETURN>
+" taglist options
+let Tlist_Inc_Winwidth=0
+let Tlist_Use_Right_Window=0
+let Tlist_File_Fold_Auto_Close=1
+
+" txtbowser
+syntax on
+filetype plugin on
+au Bufread,BufNewFile *.txt setlocal ft=txt
+
+"F7 insert curent date & myname
+"should use this in insert mode
+imap <F7> <c-r>=strftime("%Y-%m-%d %H:%M:%S yangkun")<cr>
+
+"add for python 2014-05-15 11:54:09 zhaocq
+"set filetype=python
+"au BufNewFile,BufRead *.py,*.pyw setf python
+
+" add for python complete 2014-05-15 12:00:28 zhaocq
+set ofu=syntaxcomplete#Complete
+"use 'ctrl+x ctrx+o' to complete, ctrl+n, next; ctrl+p, previous
+"esc to remove the select box
+"autocmd FileType python set omnifunc=pythoncomplete#Complete
+"autocmd FileType python runtime! autoload/pythoncomplete.vim
+
+" add for minibufexploer 2014-05-15 11:58:13 zhaocq
+let g:miniBufExplMapWindowNavVim = 1
+let g:miniBufExplMapWindowNavArrows = 1
+let g:miniBufExplMapCTabSwitchBufs = 1
+let g:miniBufExplModSelTarget = 1
+
+" add for auto update ctags and cscope
+nmap <F5> :!find . -iname '*.c' -o -iname '*.cpp' -o -iname '*.h' -o -iname '*.hpp' > cscope.files<CR>
+  \:!cscope -b -i cscope.files -f cscope.out<CR>
+  \:cs reset<CR>
+  \:!ctags -R<CR>
+
+
+set colorcolumn=80
+set ff=unix
+
+
+" vim markdown config
+au BufRead,BufNewFile *.{md,mdown,mkd,mardown,mdwn} set filetype=mkd
+set nofoldenable
+
+
+" 加入注释   
+func SetComment()  
+    call setline(1,"/*================================================================")   
+    call append(line("."),   "*   Copyright (C) ".strftime("%Y")." ZAGT Ltd. All rights reserved.")  
+    call append(line(".")+1, "*   ")   
+    call append(line(".")+2, "*   Filename   : ".expand("%:t"))   
+    call append(line(".")+3, "*   Author     : YangKun")  
+    call append(line(".")+4, "*   Email      : xyyangkun@163.com")
+    call append(line(".")+5, "*   Created    : ".strftime("%Y.%m.%d"))   
+    call append(line(".")+6, "*   Description: ")   
+    call append(line(".")+7, "*")  
+    call append(line(".")+8, "================================================================*/")   
+    call append(line(".")+9, "")  
+    call append(line(".")+10, "")  
+endfunc  
+  
+" 加入shell,Makefile注释  
+func SetComment_sh()  
+    call setline(3, "#================================================================")   
+    call setline(4, "#   Copyright (C) ".strftime("%Y")." ZAGT Ltd. All rights reserved.")  
+    call setline(5, "#   ")   
+    call setline(6, "#   Filename     : ".expand("%:t"))   
+    call setline(7, "#   Author       : YangKun")  
+    call setline(8, "#   Email        : xyyangkun@163.com")  
+    call setline(9, "#   Created      : ".strftime("%Y.%m.%d"))   
+    call setline(10, "#   Description : ")   
+    call setline(11, "#")  
+    call setline(12, "#================================================================")  
+    call setline(13, "")  
+    call setline(14, "")  
+endfunc 
+
+```
+

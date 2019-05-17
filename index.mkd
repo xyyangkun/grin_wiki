@@ -1,0 +1,19 @@
+<!---title:杨坤的博客-->
+<!---keywords:填写关键字, 以半角逗号分割-->
+
+##杨坤的博客.
+
+
+正文内容
+
+    首先感谢mikewootc提供模板。
+    希望能记录一些自己的技术笔记。
+
+[lua与C语言相互调用](lua_c_call.html)  
+[VIM的使用](vim_use.html)  
+
+[STM32遥控器红外接收](idr_recv.html)
+
+
+
+
