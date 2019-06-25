@@ -1,0 +1,20 @@
+<!---title:ubuntu使用截图工具-->
+<!---keywords:ubuntu,ubuntu使用,截图工具-->
+
+## 前言  
+  使用ubuntu时免不了需要截图做一些记录，那么ubuntu下有什么好的截图工具吗？网上找了之后发现可以使用系统截图工具gnome-screens做简单的截图，也有使用的flameshot的，这个要到ubuntu18.04了。  
+
+## 使用
+   参考[ubuntu自带截图工具--方便好用](https://blog.csdn.net/qq_38880380/article/details/78233687)  
+   截取全屏快捷键：print screen, 截取当前窗口快捷键：alt+print screen  
+   如果每一次都从Dash home，或使用命令gnome-screens -a(截指定区域的图)，太麻烦。可以通过建立ubuntu快捷方式的方法，使用ctrl+alt+a快速调出截图命令。  
+   如何建立快捷方式？  
+	设置如下：  
+	system settings---->keyboard----->shortcuts----->custom shortcuts----->点击屏幕下方的加号。名字可以填入screenshot,command可以填入gnome-screenshot -a  
+	确定后，后面为disabled，可以键入ctrl+alt+a设置快捷键。  
+
+
+
+[首页](index.html)
+
+
