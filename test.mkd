@@ -1,5 +1,6 @@
 <!---title:test-->
 <!---keywords:填写关键字, 以半角逗号分割-->
+原始引用地址:  [音频芯片](yangkuncn.cn/test.html)   
 
 ##test h2
 

@@ -1,5 +1,6 @@
 <!---title:音频芯片-->
 <!---keywords:音频芯片,audio,codec-->
+原始引用地址:  [音频芯片](yangkuncn.cn/audio_codec.html)   
 
 ##音频芯片
 混合芯片  
