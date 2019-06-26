@@ -11,6 +11,7 @@
 
 ## [lua与C语言相互调用](lua_c_call.html)  
 ## [VIM的使用](vim_use.html)  
+## [boost学习](boost_learn.html)  
 
 ## [STM32遥控器红外接收](idr_recv.html)
 

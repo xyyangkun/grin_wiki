@@ -1,3 +1,6 @@
+<!---title:boost学习-->
+<!---keywords:填写关键字, 以半角逗号分割-->
+原始引用地址:  [音频芯片](http://yangkuncn.cn/boost_learn.html)   
 参考：
 
 [boost:asio库介绍]:http://f.dataguru.cn/thread-159637-1-1.html

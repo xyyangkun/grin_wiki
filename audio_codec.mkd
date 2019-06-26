@@ -1,8 +1,8 @@
 <!---title:音频芯片-->
 <!---keywords:音频芯片,audio,codec-->
-原始引用地址:  [音频芯片](yangkuncn.cn/audio_codec.html)   
+原始引用地址:  [音频芯片](http://yangkuncn.cn/audio_codec.html)   
 
-##音频芯片
+## 音频芯片
 混合芯片  
 alc5640 alc5651 aic31 都是i2c控制，有ad da转换功能，可以对声音进行放大处理，alc系列有两个i2s接口，可以在模拟部分进行混音处理。  
 
