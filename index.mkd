@@ -19,3 +19,5 @@
 
 ## [音频芯片](audio_codec.html)
 
+## [群晖开机自启动](syno_autostart.html)
+
