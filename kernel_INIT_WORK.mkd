@@ -1,0 +1,109 @@
+<!---title:kernel INIT_WORK使用-->
+<!---keywords:kernel, driver, INIT_WORK-->
+原始引用地址:  [test](http://yangkuncn.cn/kernel_INIT_WORK.html)   
+time:  
+
+## 前言
+   最近看内核代码总看到INIT_WORK的使用，于是就想起写点代码加深对INIT_WORK的  
+印象。INIT_WORK是linux kernel中将工作推后执行的一种机制。这种机制和BH或tASKLETS
+不同之处在于工作队列是把推后的工作交由一个内核线程去执行，因此工作队列的优势就
+在于它允许重新调试甚至睡眠.
+现在有点疑问，这个函数起的线程是可以运行一次，还是可以一直运行？
+
+## 具体使用  
+不多写了，直接上写好的代码init_work.c吧
+```
+/******************************************************************************
+ *
+ *       Filename:  init_work.c
+ *
+ *    Description:  test INIT_WORK
+ *
+ *        Version:  1.0
+ *        Created:  2019年11月13日 17时37分45秒
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  yangkun (yk)
+ *          Email:  xyyangkun#163.com
+ *        Company:  yangkuncn.cn
+ *
+ *****************************************************************************/
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/proc_fs.h>
+#include <linux/workqueue.h>
+#include <linux/sched.h>
+#include <linux/init.h>
+#include <linux/interrupt.h>
+#include <linux/delay.h>
+ 
+struct my_struct_t {
+	char *name;
+	struct work_struct my_work;
+};
+
+// 这部分内存如果是局部变量，要定义成static或动态分配
+static struct my_struct_t my_name;
+
+static struct workqueue_struct *my_wq = NULL;
+static int count;
+
+void my_func(struct work_struct *work)
+{
+    struct my_struct_t *my_name = container_of(work, struct my_struct_t, my_work);
+    printk(KERN_INFO "Hello world, my name is %s!\n", my_name->name);
+	for(count = 1;count <20 ;count ++) {
+		printk(KERN_INFO "count=%d\n", count);
+		// usleep_range(50000, 50000);
+		// 延时1秒
+		usleep_range(1000000, 1000000);
+	}
+}
+
+static int __init example_init(void)
+{
+	int ret;
+
+	printk(KERN_INFO "init kernel module\n");
+
+	my_wq = create_workqueue("my wq");
+	if (!my_wq) {
+		printk(KERN_ERR "No memory for workqueue\n");
+		return 1;
+	}
+	printk(KERN_INFO "Create Workqueue successful!\n");
+ 
+	my_name.name = "Jack";
+
+	// start
+	INIT_WORK(&(my_name.my_work), my_func);
+
+	ret = queue_work(my_wq, &(my_name.my_work));
+	printk(KERN_INFO "first queue work ret=%d!\n", ret);
+
+	return 0;
+}
+ 
+static void __exit example_exit(void)
+{
+	printk(KERN_INFO "init work 1 \n");
+	flush_workqueue(my_wq);
+	printk(KERN_INFO "init work 2 \n");
+	if(my_wq)
+		destroy_workqueue(my_wq);
+	printk(KERN_INFO "init work Goodbay! \n");
+}
+ 
+module_init(example_init);
+module_exit(example_exit);
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("yangkun xyyangkun#163.com");
+
+```
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+

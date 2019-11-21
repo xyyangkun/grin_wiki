@@ -15,9 +15,11 @@
 
 ## [STM32遥控器红外接收](idr_recv.html)
 
-## [ubuntu使用截图工具](ubuntu_screenshot.html)
 
 ## [音频芯片](audio_codec.html)
 
 ## [群晖开机自启动](syno_autostart.html)
-
+# linux 使用  
+## [ubuntu使用截图工具](ubuntu_screenshot.html)
+## [如何解决内网中网络被限制的问题](how_to_salve_network_cannot_visit.html)
+## [kernel INIT_WORK使用](kernel_INIT_WORK.html)

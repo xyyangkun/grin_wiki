@@ -1,0 +1,117 @@
+<!---title:如何解决内网中网络被限制的问题-->
+<!---keywords:iptables, REDIRECT, ss-redir, route-->
+原始引用地址:  [如何解决内网中网络被限制的问题](http://yangkuncn.cn/how_to_salve_network_cannot_visit.html)   
+time: 2019.11.21 08:20   
+
+正式开始前先看个图：  
+
+![访问被拒绝](img/invalid_access.png)
+
+# 访问被拒绝  
+
+       当你处于内网中，你想访问的资源被网关拒绝时，如上图中截图，你应该怎么处理？有没好的方法解决这些问题?当然有。你只需要一台linux主机，虚拟机也可以。这台linux主机充当你的网当，当需要访问被拒绝的资源时，直接转发到其它地方处理，这样你就可以访问这些资源了。当然你不知道哪些资源禁止访问，简单粗暴的方法是直接转发所有的数据。  
+
+## 拒绝访问的原理  
+
+  如下图，是访问被拒绝时的抓包数据，图中1为一个正常的http get数据包，当网关检测到其数据中的HOST的主机或ip在禁止访问列表中时，中止正常的http连接，进行第2，3步。先给http client发个302转移（就是我们上面看到访问被拒绝的页面），之后直接给http client发送了两次rst（有可能一次是http server发的，一次是网关发的），这样一个正常的http 连接就这样被网关给中止了，这其实就是一个第三人攻击了。其实网关在给client发301和rst数据时，他应该也给server发至少一个rst。
+
+        通过这个分析我们可以发现http连接是十分不安全的，可以过滤你的数据，篡改你的数据，给你发301，也可以给你发送垃圾信息，如广告。如果是https你的信息，都是加密的，网关看不到任何传输的数据内容，包括刚才说的http get中的host。如果是https只能针对特定的ip禁止访问，这个工作量大。
+
+![抓包数据](img/capture_package.png)
+
+分析完了，以下进入正题。  
+
+## 转发tcp数据  
+
+       转发tcp分为本机转发和其它机器转发，本机转发就是虚拟机本地转发数据，其它机器转发就是充当路由器时的转发。  
+
+### 为其它机器转发  
+
+win7(172.21.9.8)===>ubuntu(172.21.9.222)==>vps(199.xx.xx.xx)==>home(123.112.xx.xx)  
+
+1. winu使用添加到home(123.112.xx.xx)的路由，就是到123.112.xx.xx的线路从172.21.9.222走  
+
+   ```
+   route add 123.112.xx.xx  172.21.9.222 
+   ```
+
+2. ubuntu(172.21.9.222)上执行转发，并添加iptabes命令redirect:  
+
+```
+sudo iptables -t nat -A POSTROUTING -j MASQUERADE
+sudo iptables -t nat -I PREROUTING -p tcp -d 123.112.xx.xx -j REDIRECT --to-ports 7777
+```
+
+3. ubuntu 要运行ss-redir:  
+
+```
+sudo ss-redir -v -u -s '199.180.xx.xx' -p '58123' -m 'aes-256-cfb' -k 'xxxxxxx' -b '0.0.0.0' -l '7777'
+或者
+sudo ss-redir -c /etc/shadowsocks-libev/config.json -v -u
+```
+
+4. 在windows下执行以下命令，连接已从远方vps(199.180.xx.xx)转发：
+
+```
+ssh xy@123.112.xx.xx
+``` 
+
+### ubuntu本地联网  
+
+ubuntu(172.21.9.222)==>vps(199.180.xx.xx)==>home(123.112.xx.xx)
+
+使用以下iptables命令执行：
+
+```
+sudo iptables -t nat -I OUTPUT -p tcp -d 123.112.xx.xx -j REDIRECT --to-ports 7777
+```
+
+本地联网与远程联网不同的区别在于：  
+
+使用iptables REDIRECT的位置不同，本的位于OUTPUT中，需要转发的位于PREROUTING中。  
+
+
+
+
+
+## 转发udp数据  
+
+外部udp访问（其它机器通过这个机器进行udp访问，win7(172.21.9.8)===>ubuntu(172.21.9.222)==>vps(199.180.xx.xx)==>home(123.112.xx.xx）
+
+```
+sudo ip rule add fwmark 0x01/0x01 table 100
+sudo ip route add local 0.0.0.0/0 dev lo table 100
+sudo iptables -t mangle -N SSUDP
+sudo iptables -t mangle -A SSUDP -p udp --dport 8000 -j TPROXY --on-port 7777 --tproxy-mark 0x01/0x01
+sudo iptables -t mangle -A PREROUTING -j SSUDP
+
+```
+
+本地udp无法转发，原因未知：
+
+<https://blog.lilydjwg.me/2018/7/16/transparent-proxy-for-tcp-and-udp-with-iptables.213139.html>
+
+# 实际使用效果
+
+1. 把网关设置为所在的机器  
+
+2. 在网关所在的机器运行以下命令，对所有数据进行转发  
+
+```
+sudo iptables -t nat -I PREROUTING -p tcp    -j REDIRECT --to-ports 7777
+```
+
+   也可以通过wireshark抓包，发现哪个或者哪段的ip被屏蔽，就哪个或段的ip添加进行：  
+
+```
+sudo iptables -t nat -I PREROUTING -p tcp -d 123.151.0.0/16 -j REDIRECT --to-ports 7777
+sudo iptables -t nat -I PREROUTING -p tcp -d 199.180.xx.xx -j REDIRECT --to-ports 7777
+```
+
+参考：  
+http://ezlost.tk/2018/02/24/ss-redir/  
+https://lixingcong.github.io/2018/06/11/ss-redir-ipset/
+
+[首页](http://yangkuncn.cn/index.html)
+
+
