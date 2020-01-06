@@ -1,0 +1,47 @@
+<!---title:android ndk build-->
+<!---keywords: android,ndk,build-->
+原始引用地址:  [android ndk build](http://yangkuncn.cn/android_ndk_build.html)   
+time:  2019.11.26 16:22:00
+
+##怎么使用安卓ndk编译可执行程序？  
+
+​         在嵌入式中，可以直接使用交叉编译工具arm-linux-gcc编译c程序，并在对应平台上运行。但是android平台下，编译c/c++程序相对来说就是比较复杂了。你不能用android的交叉编译工具直接编译，会报错。如果想在android下使用ndk编译C程序，你需要按他的规则来。
+
+参考： [NDK编译可执行文件](<https://my.oschina.net/896698/blog/499584>)
+
+
+
+1. 在工程目录下新建jni目录，jni目录 下有可执行文件hello.c和Android.mk,如下:  
+
+```c
+# filename: hello.c
+#include <stdio.h>
+int main()
+{
+printf("Hello World!\n");
+   return 0;
+}
+```
+
+```makefile
+# Android.mk
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+LOCAL_MODULE:= hello
+LOCAL_SRC_FILES := hello.c
+include $(BUILD_EXECUTABLE)
+```
+
+2. 在工程目录下执行ndk-build命令（**注意，不是jni目录下执行**）.
+
+
+
+
+
+###test h3
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+

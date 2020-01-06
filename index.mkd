@@ -23,3 +23,11 @@
 ## [ubuntu使用截图工具](ubuntu_screenshot.html)
 ## [如何解决内网中网络被限制的问题](how_to_salve_network_cannot_visit.html)
 ## [kernel INIT_WORK使用](kernel_INIT_WORK.html)
+
+## [无线网卡的使用](http://yangkuncn.cn/wireless_use.html)  
+
+# android   
+
+  
+
+[anroid ndk build](android_ndk_build.html)

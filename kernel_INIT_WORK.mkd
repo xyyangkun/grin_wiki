@@ -1,7 +1,7 @@
 <!---title:kernel INIT_WORK使用-->
 <!---keywords:kernel, driver, INIT_WORK-->
-原始引用地址:  [test](http://yangkuncn.cn/kernel_INIT_WORK.html)   
-time:  
+原始引用地址:  [kernel INIT_WORK使用](http://yangkuncn.cn/kernel_INIT_WORK.html)   
+time:  2019.11.13 17:37:45
 
 ## 前言
    最近看内核代码总看到INIT_WORK的使用，于是就想起写点代码加深对INIT_WORK的  
