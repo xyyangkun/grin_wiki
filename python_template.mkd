@@ -1,0 +1,105 @@
+<!---title:python Template使用-->
+<!---keywords:python, Template-->
+原始引用地址:  [python Template使用](http://yangkuncn.cn/python_template.html)   
+time:  2020.01.06 22:03
+
+##python Template介绍
+
+python Template第一次见到应该是在django，当时看到在html中插入一些%%的脚本，对于没有web开发经历的嵌入式开发人员来说，确实很验证理解，为什么要搞那么复杂。后来又学习了node等web知识后，才认识到这些Template的重要性。
+
+##python string.Template的使用
+
+搜索模板时，搜到的，和html中的有点像。可以替换string中的字符。
+
+以下为用法示例：
+
+```
+>>> from string import Template
+>>> template_string = '$who likes $what'
+>>> s = Template(template_string)
+>>> d = {'who': 'Tim', 'what': 'kung pao'}
+>>> s.substitute(d)
+'Tim likes kung pao'
+```
+
+分析：
+
+1. s中有以$符号说明模板中有两个变量名，用实际的变量来替换时，格式是dictionary，并且字典中的key值与模板中的变量名保持一致
+
+2. string.Template默认用$符号来标识出变量
+
+3. 改变定义变量的分隔符
+   –
+   string.Template默认用符号来标识出变量，可以将符号来标识出变量，可以将符号来标识出变量，可以将$改为其他符号。
+
+```
+>>> from string import Template
+>>> class MyTemplate(Template):
+...     delimiter = '%'
+...     
+>>> s = MyTemplate('%who knows?')
+>>> s.substitute(who='Tim')
+'Tim knows?'
+————————————————
+```
+
+delimiter是类变量，因此需要通过继承的方法重写delimiter的值
+
+参考：
+
+1.<https://docs.python.org/3/library/string.html#template-strings>
+
+2. <https://blog.csdn.net/u010895119/article/details/80308872>
+
+
+
+### html中的模板
+
+这个是别人的代码了
+
+参考<https://www.liaoxuefeng.com/wiki/1016959663602400/1017806952856928>
+
+例如，对于服务端执行以下函数：
+
+```
+@app.route('/signin', methods=['GET'])
+def signin_form():
+    return render_template('form.html', message='Bad username or password', username=username)
+```
+
+一会把form.html中相应字符串给替换掉：
+
+```
+<html>
+<head>
+  <title>Please Sign In</title>
+</head>
+<body>
+  {% if message %}
+  <p style="color:red">{{ message }}</p>
+  {% endif %}
+  <form action="/signin" method="post">
+    <legend>Please sign in:</legend>
+    <p><input name="username" placeholder="Username" value="{{ username }}"></p>
+    <p><input name="password" placeholder="Password" type="password"></p>
+    <p><button type="submit">Sign In</button></p>
+  </form>
+</body>
+</html>
+```
+
+解释：传入参数有message，会显示红色的message信息，username,也会被替换
+
+
+
+另外参考：<https://www.jianshu.com/p/e9d9d11824c8>
+
+
+
+
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+

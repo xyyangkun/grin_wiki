@@ -28,6 +28,10 @@
 
 # android   
 
-  
+## [anroid ndk build](android_ndk_build.html)
 
-[anroid ndk build](android_ndk_build.html)
+
+
+# python
+
+## [python Template使用](python_template.html)
