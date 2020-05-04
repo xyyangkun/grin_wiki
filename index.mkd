@@ -24,7 +24,11 @@
 ## [如何解决内网中网络被限制的问题](how_to_salve_network_cannot_visit.html)
 ## [kernel INIT_WORK使用](kernel_INIT_WORK.html)
 
-## [无线网卡的使用](http://yangkuncn.cn/wireless_use.html)  
+## [无线网卡的使用](wireless_use.html)  
+
+## [几种可用的linux shell](free_shell.html)
+
+## [ninja的使用](ninja_use.html)
 
 # android   
 
@@ -35,3 +39,14 @@
 # python
 
 ## [python Template使用](python_template.html)
+
+# C/C++
+
+## [c++11新特性](c++11_options.html)
+## [C++内存管理之shared_ptr](http://yangkuncn.cn/c++_shared_ptr.html)  
+
+
+
+# 嵌入式开发
+
+## [一个海思TOE的bug](http://yangkuncn.cn/hisi_toe_bug.html)  

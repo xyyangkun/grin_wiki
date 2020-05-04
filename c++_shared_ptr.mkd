@@ -1,0 +1,542 @@
+<!---title:c++ 内存管理之shared_ptr-->
+<!---keywords:c++, stl, shared_ptr-->
+原始引用地址:  [C++内存管理之shared_ptr](http://yangkuncn.cn/c++_shared_ptr.html)   
+time:  2020.01.29 01:22
+
+#引子
+
+　　c++中动态内存的管理是通过new和delete来完成的，只要保证new和delete的配对使用，是没有问题的。但是有时候我们会忘记释放内存，甚至有时候我们根本就不知道什么时候释放内存。特别时在多个线程间共享数据时，更难判断内存该何使释放。这种情况下就机器容易产生引用非法内存的指针。　
+
+　为了更容易（同时也更安全的管）的使用动态内存，新的标准库（C++11）提供了两种智能指针（smart pointer）类型来管理动态对象。智能指针的行为类似于常规指针。重要的区别是它负责自动释放所指向的对象。新标准提供的这两种智能指针的区别在于管理底层指针的方式：shared_ptr允许多个指针指向同一个对象；unique_ptr则独占所指向的对象。标准库还定义了一个weak_ptr的伴随类，他是一种弱引用，指向shared_ptr所管理的对象。这三种类型都定义在memory头文件中。
+
+![shared_ptr他unique_ptr都支持的操作](img/c++_shared_ptr_opt.png)
+
+![定义和改变shared_ptr的其它方法](img/c++_shared_ptr_int_mod.png)
+
+# **初始化 sahred_ptr**
+
+　　智能指针的使用方式与普通指针类似。解引用一个智能指针返回它指向的对象。如果在一个条件判断中使用智能指针，效果就是检测它是否为空：
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_prt.cpp
+ *    Description:  test shared_prt
+ *					编译： g++ t_shared_prt.cpp -std=c++11
+ *    				使用 valgrind --leak-check=full --show-reachable=yes -v 
+ *    				检测没有错误
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+int main()
+{
+	//! 空指针
+	std::shared_ptr<std::string > p1;
+	// std::shared_ptr<int> p1;
+	if(!p1) //! 默认初始化时的智能指针中保存一个空指针！并不是“”空字符串
+		std::cout << "p1 == NULL" << std::endl;
+
+
+	//! 初始化
+	std::shared_ptr<std::string> p2(new std::string);
+	if(p2 && p2->empty()) //! empty时属于string的成员函数
+	{
+		*p2 = "helloworld";
+		std::cout << *p2 << std::endl;
+	}
+
+	// shared_ptr<int> pa = new int(1);//! error: 不允许暴露裸露的指针进行赋值操作
+	
+
+	// std::string *s = new std::string("this is c++ string"); delete(s);
+	
+	// 一般的初始化方式 
+	// std::shared_ptr<std::string> pstr(new std::string("normal usage!"));
+	std::shared_ptr<std::string> pstr(new std::string("normal usage!"));
+	std::cout << *pstr << std::endl;
+
+	// 推荐的安全的初始化方式 
+	std::shared_ptr<std::string> pstr1 = std::make_shared<std::string>("safe usage!");
+	std::cout << *pstr1 << std::endl;
+
+}
+```
+
+ 关于其它初始化智能指针的方法，如下；不推荐！在这里展示出来是希望极力避免不安全的使用范例。
+
+```c
+/*不推荐*/
+    int * p = new int(32);
+    shared_ptr<int> pp(p);
+    cout<<*pp<<endl;
+
+    /*意外的情况*/
+//    delete p;               //!不小心把delete掉了。
+//    cout<<*pp<<endl;·       //!pp也不再有效。
+```
+
+# 关于get()函数
+
+智能指针定义了一个名为get的函数，它返回一个内置指针，指向智能指针的管理的对象。此函数设置的初衷是当我们向不能使用智能指针的代码传递一个内置指针。使用get返回指针的代码不能delete此指针。
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_get.cpp
+ *    Description:  test shared_ptr get use
+ *    				build: g++ test_shared_ptr_get.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+void useShared_ptr(int *p)
+{
+	std::cout << *p << std::endl;
+}
+
+void deletePointer(int *p)
+{
+	delete p;
+}
+
+int main()
+{
+	std::shared_ptr<int> p1 = std::make_shared<int>(32);
+
+	// shared_ptr<int>p2(p1.get()); //! 错误的用法:但是p1, p2各大自保留了对一段内存的引用计数，其中有一个引用计数耗尽，资源也就释放了。
+	
+	useShared_ptr(p1.get());
+
+	deletePointer(p1.get()); //! error coredump
+}
+```
+
+再次声明：get用来将指针的访问权限传递给代码，只有在确定代码不会delete指针的情况下，才能使用get。特别是，永远不要用get初始化另一个智能指针或者为另一个智能指针赋值！
+
+# **关于mak_shared函数：**
+
+　　最安全的分配和使用动态内存的方法是调用一个名为make_shared的标准库函数，此函数在动态内存中分配一个对象并初始化它，返回此对象的shared_ptr。与只能指针一样，make_shared也定义在头文件memory中。
+
+```c
+/******************************************************************************
+ *
+ *       Filename:  t_shared_ptr_make_shared.cpp
+ *
+ *    Description:   test ake_shared use
+ *    				build: g++ t_shared_ptr_make_shared.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+int main()
+{
+	std::shared_ptr<int> p = std::make_shared<int>(42);
+	std::cout << *p << std::endl;
+
+	std::shared_ptr<std::string> pstr = std::make_shared<std::string>("9999");
+	std::cout << *pstr << std::endl;
+
+	std::shared_ptr<int> pint = std::make_shared<int>(); //!默认初始化为0
+	std::cout << *pint << std::endl;
+
+	auto pau  = std::make_shared<std::string>("auto"); //!更简单，更常用的方式
+	std::cout << *pau << std::endl;
+}
+```
+
+　　使用make_shared用其参数来构造给定类型的对象；传递的**参数**必须能够与该类型的某个**构造函数相匹配**。
+
+　　通常我们用auto来定义一个对象来保存make_shared的结果，这种方式更为简单。
+
+# **shared_ptr的拷贝和赋值**
+
+　　当进行拷贝或者赋值操作时，每个shared_ptr都会记录有多少个其他的shared_ptr指向相同的对象：
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_copy.cpp
+ *    Description:  test shared_ptr 引用计数
+ *					build: g++ t_shared_ptr_copy.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+int main()
+{
+	auto p = std::make_shared<int>(42); //!指向的对象只有p一个引用者
+	std::cout << p.use_count() << std::endl;
+
+	auto q(p);		//!p和q指向相同的对象，此对象有两个引用者
+	std::cout << p.use_count() << std::endl;
+}
+```
+
+# **shared_ptr作返回值：**
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_ret.cpp
+ *    Description:  test shared_ptr return value
+ *    				build: g++ t_shared_ptr_ret.cpp
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+std::shared_ptr<std::string> factory(const char *p)
+{
+	return std::make_shared<std::string>(p);
+}
+
+void use_factory()
+{
+	std::shared_ptr<std::string> p = factory("helloworld");
+	std::cout << *p << std::endl;	//!离开作用域时，p引用的对象被销毁
+}
+
+std::shared_ptr<std::string> return_shared_ptr()
+{
+	std::shared_ptr<std::string> p = factory("helloworld");
+	std::cout << *p << std::endl;
+	std::cout << "in ret:\t\t" <<  p.use_count() << std::endl;
+	return p;		//!返回p时，引用计数进行了递增操作
+					//!p离开了作用域，但他指向的内存不会被释放掉
+}
+
+int main()
+{
+	use_factory();
+	auto p = return_shared_ptr();
+
+	std::cout << "after ret:\t" <<  p.use_count() << std::endl;
+}
+```
+
+# **引用计数：**
+
+　　可以认为每个shared_ptr都有一个关联的计数器，通常称其为**引用计数。**无论何时我们拷贝一个shared_ptr，计数器都会递增。例如，当用一个shared_ptr去初始化另一个shared_ptr；当我们给shared_ptr赋予一个新的值或者是shared_ptr被销毁(例如一个局部的shared_ptr离开其作用域)时，计数器就会递减。一旦一个shared_ptr的计数器变为0，他就会自动释放自己所管理的对象。
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_count.cpp
+ *    Description:  test shared_ptr use count
+ *				build g++ t_shared_ptr_count.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+int main()
+{
+	auto p = std::make_shared<int>(42); //!指向的对象只有p一个引用者。
+	std::cout << p.use_count() << std::endl;
+
+	auto q = std::make_shared<int>(56);
+	std::cout << q.use_count() << std::endl; //!指向对象只有q一个引用者
+
+	std::cout << "------------------------------------afterAssin-------------------------------" << std::endl;
+	p = q;		//!p原来引用的对象经过赋值之后就释放掉了，q引用的对象有了q和p一个人个引用。
+	std::cout << *p << " === " << *q << std::endl;
+	std::cout << q.use_count() <<std::endl;
+}
+```
+
+# **其他shared_ptr操作**
+
+　　shared_ptr还定义了一些其他的操作，参考前面的shared_ptr操作表格，例如，我们可以用reset将一个 新的指针赋予一个shared_ptr：
+
+````c
+#include <iostream>
+#include <memory>
+
+int main()
+{
+    std::shared_ptr<std::string> p1(new std::string("helloworld--1"));
+//    p1 = new string("helloworld2--2");//error!
+        p1.reset(new std::string("helloworld2--2"));
+    std::cout<<*p1<<std::endl;
+}
+````
+
+　与赋值类似，reset会更新（-1）引用计数，如果需要的话，会释放p1指向的对象。reset成员经常与unique一起使用，来控制多个shared_ptr的共享对象。在改变底层对象之前，我们在检查自己是否是当前对象仅有的用户。如果不是，在改变之前要做一份新的拷贝：
+
+```c
+#include <iostream>
+#include <memory>
+
+int main()
+{
+    std::shared_ptr<string> p1(new std::string("helloworld--1"));
+    std::shared_ptr<std::string> p2(p1);
+
+    if(p1.unique())
+        std::cout<<*p1 + string(" is unique!")<<std::endl;
+    else{
+        p1.reset(new std::string("new reset!"));
+        std::cout<<*p1<<std::endl;
+    }
+}
+```
+
+# **容器中的shared_ptr-记得用erase节省内存**　
+
+　　对于一块内存，shared_ptr类保证只要有任何shared_ptr对象引用它，他就不会被释放掉。由于这个特性，保证shared_ptr在不用之后不再保留就非常重要了，通常这个过程能够自动执行而不需要人工干预，有一种例外就是我们将shared_ptr放在了容器中。所以永远不要忘记erase不用的shared_ptr。
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_erase.cpp
+ *    Description:   test shared_ptr erase
+ *    			build: g++ t_shared_ptr_erase.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+#include <list>
+
+int main()
+{
+	std::list<std::shared_ptr<std::string>> pstrList;
+
+	pstrList.push_back(std::make_shared<std::string>("1111"));
+	pstrList.push_back(std::make_shared<std::string>("2222"));
+	pstrList.push_back(std::make_shared<std::string>("3333"));
+	pstrList.push_back(std::make_shared<std::string>("4444"));
+
+	for(auto p:pstrList)
+	{
+		if(*p == "3333")
+		{
+			/* do some thing! */
+			std::cout << "found 3333" << std::endl;
+		}
+		else
+		std::cout << *p << std::endl;
+	}
+
+	/* 包含3333的数据我们已经使用守了*/
+	std::list<std::shared_ptr<std::string>>::iterator itr = pstrList.begin();
+	for(; itr != pstrList.end(); ++itr)
+	{
+		if(**itr == "3333")
+		{
+			std::cout << **itr << std::endl;
+			itr = pstrList.erase(itr);
+			// pstrList.erase(pstrList.begin());
+		}
+	}
+
+	std::cout << "--------------after remoe ------------------------" << std::endl;
+	for(auto p:pstrList)
+		std::cout << *p << std::endl;
+}
+
+```
+
+# **状态共享——why use shared_ptr?**
+
+　　使用shared_ptr在一个常见的原因是允许多个多个对象共享相同的状态，而非多个对象独立的拷贝！
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_advange.cpp
+ *    Description:   
+ *				g++ t_shared_ptr_advangecpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+#include <list>
+
+void copyCase()
+{
+	std::list<std::string> v1({"1", "b", "d"});
+	std::list<std::string> v2 = v1; 	//!v1==v2占用两段内存
+
+	v1.push_back("cc");				//! v1!=v2
+
+	for(auto &p:v1)
+		std::cout << p << std::endl;
+
+	std::cout << " ---------------void copyCase() --------------" << std::endl;
+
+	for(auto &p:v2)
+		std::cout << p << std::endl;
+}//v1和v2分属两个不同的对象，一个改变不会影响的状态
+
+void shareCase()
+{
+	std::shared_ptr<std::list<std::string>> v1 = std::make_shared<std::list<std::string>>(2, "bb");
+	std::shared_ptr<std::list<std::string>> v2 = v1;
+
+	(*v1).push_back("c2c");
+
+	for(auto &p:*v1)
+	{
+		std::cout << p << std::endl;
+	}
+
+	std::cout << " ---------------void copyCase() --------------" << std::endl;
+
+	for(auto &p:*v2)
+		std::cout << p << std::endl;
+}//v1和v2分属一个对象的两个引用，有引用计数为证，其内容的改变是统一的
+
+int main()
+{
+	copyCase();
+	std::cout << "+++++++++++++++++++++++++" << std::endl;
+	shareCase();
+}
+
+```
+
+# **智能指针与异常**
+
+　　异常发生后，常规的动态内存常常不能正确释放。但是如果使用智能指针，即程序过早结束，智能指针也能确保在内存不需要时将其释放：
+
+```c
+void f()
+{
+     shared_ptr<int>sp(new int(42)) ; 
+}
+```
+
+　　函数的推出，要么有两种情况，正常处理结束或者发生了异常，无论哪种情况，局部对象都会被销毁。在上面的程序中，sp是一个shared_ptr，因此sp销毁时会检查引用计数。在此例中，sp是指向这块内存的唯一指针。所以会被释放掉。
+
+ 　　与之相对的，当发生异常时，我们直接管理的内存时不会自动释放的，如果使用内置指针管理内存，且在new之后对应的delet之前发生异常，则内存不会释放。
+
+ ```c
+void f()
+{
+    int *p = new int(42);
+    //code//!异常抛出,且没有在f()中被捕获。
+    delete p;      
+}
+ ```
+
+　如果在new和delete之间发生异常，且异常未在f()中捕获，则内存就永远不会被释放了。
+
+# **shared_ptr对象的销毁**
+
+**1）管理动态数组**
+
+　　默认情况下，shared_ptr指向的动态的内存是使用delete来删除的。这和我们手动去调用delete然后调用对象内部的析构函数是一样的。**与unique_ptr不同，shared_ptr不直接管理动态数组。如果希望使用shared_ptr管理一个动态数组，必须提供自定义的删除器来替代delete 。**
+
+```c
+/******************************************************************************
+ *       Filename:  t_shared_ptr_arr.cpp
+ *    Description:  test shared_ptr dynamic array
+ *					build: g++ t_shared_ptr_arr.cpp -std=c++11
+ *****************************************************************************/
+#include <iostream>
+#include <memory>
+
+class DelTest
+{
+public:
+	DelTest()
+	{
+		j = 0;
+		std::cout << "DelTest()" << ":" << i++ << std::endl;
+	}
+	~DelTest()
+	{
+		// i = 0;
+		std::cout << "~DelTest() " << ":" << i-- << std::endl;
+
+	}
+	static int i,j;
+};
+
+int DelTest::i = 0;
+int DelTest::j = 0;
+
+void noDefine()
+{
+	std::cout << "no_define start running!" << std::endl;
+	std::shared_ptr<DelTest> p(new DelTest[10]);
+}
+
+void selfDefine()
+{
+	std::cout << "selfDefine start running!" << std::endl;
+	std::shared_ptr<DelTest> p(new DelTest[10], [](DelTest *p){delete[] p;});
+												//!传入lambada表达式代替delete操作
+}
+
+int main()
+{
+	noDefine();		//!构造10次，析构1次。内存泄漏
+	std::cout << "------------------------------------------------" << std::endl;
+	selfDefine();	//!构造次数==析构次数 无内存泄漏
+}
+```
+
+通过自定义删除器的方式shared_ptr虽然管理的是一个动态数组。但是shard_ptr并不支持下标运算符的操作。而且智能指针类型不支持指针算术运算(不能取地址)。因此为了访问数组中的元素，必须用get获取一个内置指针，然后用它来访问数组元素。
+
+ 
+
+**2）管理非常规动态对象**
+
+　　某些情况下，有些动态内存也不是我们new出来的，如果要用shared_ptr管理这种动态内存，也要自定义删除器。
+
+```
+#include <iostream>
+#include <stdio.h>
+#include <memory>
+using namespace std;
+
+void closePf(FILE * pf)
+{
+    cout<<"----close pf after works!----"<<endl;
+    fclose(pf);
+}
+
+int main()
+{
+//    FILE * fp2 = fopen("bin2.txt", "w");
+//    if(!pf)
+//        return -1;
+//    char *buf = "abcdefg";
+//    fwrite(buf, 8, 1, fp2);
+//    fclose(fp2);
+    shared_ptr<FILE> pf(fopen("bin2.txt", "w"),closePf);
+    cout<<"*****start working****"<<endl;
+    if(!pf)
+        return -1;
+    char *buf = "abcdefg";
+    fwrite(buf, 8, 1, pf.get());    //!确保fwrite不会删除指针的情况下，可以将shared_ptr内置指针取出来。
+    cout<<"----write int file!-----"<<endl;
+}　　　　　　　　　　　　　　　　  //！即可以避免异常发生后无法释放内存的问题，也避免了很多人忘记执行fclose的问题。
+```
+
+在这里可以设想一下TCP/IP中链接的打开和关闭的情况，同理都可以使用智能指针来管理。
+
+ 
+
+ **总结：**
+
+　　**最后总结一下上面所陈述的内容，也是shared_ptr使用的基本规范**
+
+**1）不使用相同的内置指针值初始化（或reset）多个智能指针。**
+
+**2）不delete get函数返回的指针。**
+
+**3）如果你使用了get返回的指针，记住当最后一个对应的智能指针销毁后，你的指针就变为无效了。**
+
+**4）如果你使用智能指针管理的资源不是new分配的内存，记得传递给他一个删除器。**
+
+ 
+
+ **weak_ptr**
+
+ weakptr使用的比较少，如有兴趣了解，请去参考该篇文章：https://www.cnblogs.com/DswCnblog/p/5628314.html
+
+
+
+# 转自
+
+[C++内存管理之shared_ptr](https://www.cnblogs.com/wangkeqin/p/9351191.html)
+
+<https://www.cnblogs.com/lzpong/p/6188034.html>
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+

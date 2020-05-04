@@ -1,0 +1,58 @@
+<!---title:free shell-->
+<!---keywords:free shell,gcloud,alicloud,-->
+原始引用地址:  [test](http://yangkuncn.cn/free_shell.html)   
+time:  2020.01.12 08:28
+
+##概述
+
+​        当你想学习linux时，总要开一个虚拟机，是不是很不爽？你可以说不开虚拟机，家里放一个j1900的无风扇的小电脑，就可以充当一个7*24小时不间断的服务器了。但是j1900又太慢了，你编译一个带stl的c++程序，你就知道你的电脑有多慢了。有没有一些好用又免费的linux主机呢？当然有！gcloud就是一种选择。
+
+#gcloud的使用
+
+## 简单访问
+
+想使用gcloud，前提是你可以访问，并且有相关帐号。之后你可以访问以下网址，就是一个linux web shell,常用的开发环境都有了。
+
+```shell
+https://ssh.cloud.google.com/cloudshell/editor
+```
+
+我的的shell如下图：
+
+![gcloud shell](img/free_shell_gcloud_shell.png)
+
+## 本地的ssh访问
+
+web shell的方式访问让我们很不爽，可以通过ssh直连吗？当然可以。
+
+通过查看它的帮助文档：
+
+```
+https://cloud.google.com/sdk/gcloud/reference/alpha/cloud-shell/ssh
+```
+
+可以通过：
+
+```
+gcloud alpha cloud-shell ssh
+```
+
+这个命令，是需要你在本地linux安装的，虽然我用的是ubuntu，但是无法通过apt-get安装，只能使用proxychains wget下载压缩包后安装 。参考：
+
+```
+https://cloud.google.com/sdk/docs/#linux
+```
+
+对了，你安装好后，运行gcloud命令，可能还要在前面加上proxychains，因为可能无法连网。
+
+你成功执行gcloud alpha cloud-shell ssh时，其实这个也是调用了本地的ssh命令的，你可以通过ps直接查看其运行ssh的参数。如下：
+
+![free_shell_gcloud_ssh_cmd](img/free_shell_gcloud_ssh_cmd.png)
+
+把这个devshell-vm-*.cloudshell.dev的域名，在hosts中添加上ip后，就可以直接通过ip访问了。
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+
