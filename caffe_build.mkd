@@ -1,0 +1,66 @@
+<!---title:caffe在ubuntu18.04下编译-->
+<!---keywords:caffe, build, ubuntu18,-->
+原始引用地址:  [caffe在ubuntu18.04下编译](http://yangkuncn.cn/caffe_build.html)   
+time:  2020.5.17 23:27
+
+## caffe介绍
+
+cafee是一框架工具。官网：<http://caffe.berkeleyvision.org/>
+
+下载代码：
+
+```
+git clone git@github.com:BVLC/caffe.git
+```
+
+安装依赖：
+
+```
+sudo apt-get install --no-install-recommends libboost-all-dev protobuf-compiler libgflags-dev libgoogle-glog-dev liblmdb-dev libopenblas-dev libopencv-dev libleveldb-dev libsnappy-dev libgsl-dev libatlas-base-dev 
+sudo apt-get install libhdf5-* 
+sudo apt install libprotobuf-dev
+sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
+sudo apt-get install --no-install-recommends libboost-all-dev
+sudo apt-get install libatlas-base-dev 
+sudo apt-get install python-numpy
+```
+
+
+
+### 编译方法
+
+1. 更改配置文件：
+
+cp Makefile.config.example Makefile.config
+
+由于我用的是虚拟机，需要更改以下选项：
+
+CPU_ONLY := 1
+
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial/
+
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/hdf5/serial
+
+\# 后面两项主要是因为16.04的hdf5库的路径不对。
+
+18.04还要启用以下项：
+
+USE_PKG_CONFIG := 1 
+
+编译:
+
+之后，执行make all -j4，可以正常编译。
+
+之后：
+
+make test make runtest
+
+
+
+如果调用python接口，还要运行以下命令编译python接口：
+
+ make pycaffe  	
+
+
+
+[首页](http://yangkuncn.cn/index.html)

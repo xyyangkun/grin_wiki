@@ -1,0 +1,210 @@
+<!---title:运行caffe识别数字的模型mnist-->
+<!---keywords:填写关键字, 以半角逗号分割-->
+原始引用地址:  [运行caffe识别数字的模型mnist](http://yangkuncn.cn/caffe_mnist.html)  
+time:  2020.5.17 23:28
+
+## mnist是啥？
+
+mnist是一个运用神经网络识别数字的模型，可以识别数字0到9.
+
+
+
+### 获取mnist模块与数据
+
+对于mnist（就是数字识别）例子，参考以下地址，获取数据训练相关数据：
+
+<http://caffe.berkeleyvision.org/gathered/examples/mnist.html>
+
+准备数据：
+
+```
+cd $CAFFE_ROOT 
+./data/mnist/get_mnist.sh 
+./examples/mnist/create_mnist.sh
+```
+
+
+
+### 运用多核，加速训练
+
+caffe在纯CPU模式下，使用多核运行
+
+<https://blog.csdn.net/b876144622/article/details/80009877>
+
+1. sudo apt-get install -y libopenblas-dev
+
+2、修改caffe目录下的Makefile.config文件，将BLAS: =atlas修改为BLAS: =open
+
+3、再编译caffe，首先make clean，清除之前的编译结果，再依次执行make all -j16， make test -j16， make runtest -j16，编译caffe。-j16是指用16个核并行编译caffe，可以大大加快编译速度。
+
+4、编译完成后，执行训练前，需要export OPENBLAS_NUM_THREADS=4, 即使用4个核进行训练
+
+
+
+### 开始训练
+
+因为编译时，选择使用cpu，使用要更改文件：
+
+examples/mnist/lenet_solver.prototxt
+
+把：solver_mode: GPU      改为：solver_mode: CPU 
+
+
+
+训练命令：
+
+```
+export PYTHONPATH=/home/xy/works/caffe/python/
+
+time ./examples/mnist/train_lenet.sh   #vm用时17m36s  j1900 42m55
+
+```
+
+
+
+### 进行图片识别
+
+#### 用软件手写一个图片
+
+（注意：识别的图片，**一定要是黑底， 数字用白色写**）
+
+安装画图软件gimp：
+
+```
+sudo apt-get install gimp
+```
+
+
+
+gimp 创建27*27的bmp图：
+
+1. 新建file -> new 选width 27  height27 单位为像素， 底色选黑
+
+2. 画图：选画笔，左边size ,可以选2，size太大，27*27的画布不够画的。
+
+3. 导出：file->export as, 格式先jpg， 
+
+#### 识别手写的图片
+
+在运行python/calssify前要运行安装 protobuf：
+
+```sudo  pip install protobuf```
+
+在识别图片前，需要对classify进行更改：
+
+```
+git diff python/classify.py
+diff --git a/python/classify.py b/python/classify.py
+index 4544c51..446c55e 100755
+--- a/python/classify.py
++++ b/python/classify.py
+@@ -105,9 +105,9 @@ def main(argv):
+ 
+     # Make classifier.
+     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
+-            image_dims=image_dims, mean=mean,
+-            input_scale=args.input_scale, raw_scale=args.raw_scale,
+-            channel_swap=channel_swap)
++            image_dims=None, mean=None,
++            input_scale=None, raw_scale=None,
++            channel_swap=None)
+ 
+     # Load numpy array (.npy), directory glob (*.jpg), or image file.
+     args.input_file = os.path.expanduser(args.input_file)
+@@ -116,11 +116,11 @@ def main(argv):
+         inputs = np.load(args.input_file)
+     elif os.path.isdir(args.input_file):
+         print("Loading folder: %s" % args.input_file)
+-        inputs =[caffe.io.load_image(im_f)
++        inputs =[caffe.io.load_image(im_f, False)
+                  for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
+     else:
+         print("Loading file: %s" % args.input_file)
+-        inputs = [caffe.io.load_image(args.input_file)]
++        inputs = [caffe.io.load_image(args.input_file, False)]
+ 
+     print("Classifying %d inputs." % len(inputs))
+ 
+@@ -131,6 +131,7 @@ def main(argv):
+ 
+     # Save
+     print("Saving results into %s" % args.output_file)
++    print(predictions)
+     np.save(args.output_file, predictions)
+
+git diff  python/caffe/classifier.py
+diff --git a/python/caffe/classifier.py b/python/caffe/classifier.py
+index 64d804be..65b0d881 100644
+--- a/python/caffe/classifier.py
++++ b/python/caffe/classifier.py
+@@ -69,18 +69,18 @@ class Classifier(caffe.Net):
+         for ix, in_ in enumerate(inputs):
+             input_[ix] = caffe.io.resize_image(in_, self.image_dims)
+ 
+-        if oversample:
+-            # Generate center, corner, and mirrored crops.
+-            input_ = caffe.io.oversample(input_, self.crop_dims)
+-        else:
+-            # Take center crop.
+-            center = np.array(self.image_dims) / 2.0
+-            crop = np.tile(center, (1, 2))[0] + np.concatenate([
+-                -self.crop_dims / 2.0,
+-                self.crop_dims / 2.0
+-            ])
+-            crop = crop.astype(int)
+-            input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
++        #if oversample:
++        #    # Generate center, corner, and mirrored crops.
++        #    input_ = caffe.io.oversample(input_, self.crop_dims)
++        #else:
++        #    # Take center crop.
++        #    center = np.array(self.image_dims) / 2.0
++        #    crop = np.tile(center, (1, 2))[0] + np.concatenate([
++        #        -self.crop_dims / 2.0,
++        #        self.crop_dims / 2.0
++        #    ])
++        #    crop = crop.astype(int)
++        #    input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
+ 
+         # Classify
+         caffe_in = np.zeros(np.array(input_.shape)[[0, 3, 1, 2]],
+@@ -91,8 +91,8 @@ class Classifier(caffe.Net):
+         predictions = out[self.outputs[0]]
+ 
+         # For oversampling, average predictions across crops.
+-        if oversample:
+-            predictions = predictions.reshape((len(predictions) // 10, 10, -1))
+-            predictions = predictions.mean(1)
++        #if oversample:
++        #    predictions = predictions.reshape((len(predictions) // 10, 10, -1))
++        #    predictions = predictions.mean(1)
+ 
+         return predictions
+```
+
+
+
+最后，真正到运行命令的时候了：
+
+```
+使用命令计算图片：
+python python/classify.py    --model_def examples/mnist/lenet.prototxt   --pretrained_model examples/mnist/lenet_iter_10000.caffemodel   --center_only      --images_dim 28,28 /home/user/Desktop/2.jpg  FOO
+```
+
+更改上在py程序后，会输出以下内容 ：
+
+```
+Saving results into FOO
+[[2.63039285e-10 1.69570372e-10 1.00000000e+00 3.37297190e-10
+  1.04435086e-16 6.86246951e-15 1.50223258e-14 4.68932055e-12
+  6.54263449e-11 1.28875165e-14]]
+
+```
+
+由于输入的是2.jpg，所以第2个位置（从0开始）的概率最大，几乎是1.可以分别手写0到9图片，进行测试。
+
+我分别在vm(i53230), j1900（真机）, i737**m(真机)进行测试，cpu运行过，识别率还可以，速度感觉都比较慢在1s以上吧。
+
+
+
+[首页](http://yangkuncn.cn/index.html)

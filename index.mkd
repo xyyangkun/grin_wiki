@@ -50,3 +50,11 @@
 # 嵌入式开发
 
 ## [一个海思TOE的bug](http://yangkuncn.cn/hisi_toe_bug.html)  
+
+
+
+# AI
+
+[caffe在ubuntu18.04下编译](http://yangkuncn.cn/caffe_build.html)
+
+[运行caffe识别数字的模型mnist](http://yangkuncn.cn/caffe_mnist.html)
