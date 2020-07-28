@@ -30,6 +30,8 @@
 
 ## [ninja的使用](ninja_use.html)
 
+## [linux therad](linux_thread.html) 
+
 # android   
 
 ## [anroid ndk build](android_ndk_build.html)

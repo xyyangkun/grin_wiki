@@ -1,0 +1,192 @@
+<!---title:linux_thread-->
+<!---keywords:linux thread -->
+原始引用地址:  [linux therad](http://yangkuncn.cn/linux_thread.html)   
+time:  2020.7.28 21:27
+
+#简介
+
+现在cpu都是多核了，怎么运用多核性能？程序设计需要运行多任务。实现这些，多线程是最好的选择。
+
+#线程创建
+
+```c
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg);
+```
+
+# 线程终止
+
+终止某个线程而不终止整个进程，有三种方法：
+
+1. 从线程主函数return。这种方法对主控线程不适用，从main函数return相当于调用exit。
+
+2. 一个线程可以调用pthread_cancel终止同一进程中的另一个线程。
+
+3. 线程可以调用pthread_exit终止自己。
+
+   
+
+# 线程属性
+
+```c
+#define SET_STACKSIZE (1*1024*1024 + 200*1024)
+/*
+ * desp     :   create thread set stack size
+ * parm     :   thread fun, args
+ * return   :   <0 error, 0 success
+ */
+int make_thread(pthread_t *tid, void *(fn)(void *), void *arg)
+{
+    int err = 0;
+	pthread_attr_t attr;
+    // 初始化线程属性
+    err = pthread_attr_init(&attr);
+    if (err != 0)
+    {
+        error("ERROR pthreat attr init, ret=%d, errstr:%s\n",
+                err, strerror(errno));
+        return err;
+    }
+	// 创建分离线程，不用pthread_join, 自己退出后会释放内存
+    err = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if (err != 0)
+    {
+        error("ERROR set statck size, ret=%d, errstr:%s\n",
+                err, strerror(errno));
+        goto ERROR;
+    }
+	// 设置线程栈空间大小，不使用默认栈空间大小，在多线程情况下可显著降低内存使用
+    err = pthread_attr_setstacksize(&attr, SET_STACKSIZE);
+    if (err != 0)
+    {
+        error("ERROR set statck size, ret=%d, errstr:%s\n",
+                err, strerror(errno));
+        goto ERROR;
+    }
+	// 创建内存
+    err = pthread_create(tid, &attr, fn, arg);
+    if(err != 0)
+    {
+        device_obj_error("ERROR create pthread, ret=%d, errstr:%s\n",
+                err, strerror(errno));
+        goto ERROR;
+    }
+
+    err = pthread_attr_destroy(&attr);
+    if(err != 0)
+    {
+        device_obj_error("ERROR set statck size, ret=%d, errstr:%s\n",
+                err, strerror(errno));
+        goto ERROR;
+    }
+    ERROR:
+    return err;
+}
+```
+
+## 给线程设置名字
+
+[linux 下设置线程名字](https://blog.csdn.net/lijzheng/article/details/39963331)
+
+pthread_create创建线程后，线程名是直接从父进程继承来的，如果对多线程分析，很不方便，可以对不同的线程设置不同的名字
+
+linux下的prctl库自kernel 2.6.9后支持`PR_SET_NAME选项，用于设置进程名字`，linux的进程一般使用lwp，所以这个函数可以设置线程名字，api定义如下：
+
+```
+#include <sys/prctl.h>
+
+ int prctl(int option, unsigned long arg2, unsigned long arg3,
+                 unsigned long arg4, unsigned long arg5);
+
+ PR_SET_NAME (since Linux 2.6.9)
+              Set the process name for the calling process, using the value in the location pointed to by (char *) arg2.  The name
+              can be up to 16 bytes long, and should be null-terminated if it contains fewer bytes.
+```
+
+查看线程运行状态 
+
+[linux下查看线程状态](https://www.cnblogs.com/youyipin/p/7771689.html)
+
+[linux下使用top和pmap命令查看系统运行状态和进程运行状态](https://blog.csdn.net/baobingji/article/details/84111380)
+
+查看/proc/pid/task/tid/stat文件里面的信息，可以查看对应线程的状态。
+
+例如cat /proc/6291/task/6291/status，可以看到线程name, State(运行状态)，应用内存等。
+
+测试程序如下所示：
+
+```c
+//build gcc t.c  -lpthread -Wall
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/types.h> //gettid
+
+void *thread1(void* arg)
+{
+	prctl(PR_SET_NAME,"THREAD1");
+	printf("thread1 task id:%lld\n", (long long int)syscall(__NR_gettid));
+	while(1)
+	{
+		printf("thread1\n");
+		sleep(1000);
+	}
+}
+
+void *thread2(void *arg)
+{
+	printf("thread2 task id:%lld\n", (long long int)syscall(__NR_gettid));
+	while(1)
+	{
+		printf("thread2\n");
+
+		sleep(1000);
+	}
+}
+int main()
+{
+
+	pthread_t th1,th2;
+	void* retval;
+	pthread_create(&th1,NULL,thread1,NULL);
+	pthread_create(&th2,NULL,thread2,NULL);
+
+
+	printf("main thread:%lld\n", (long long int)pthread_self());
+	printf("thread1:%lld\n", (long long int)th1);
+	printf("thread2:%lld\n", (long long int)th2);
+
+	printf("main thread:%lld\n", (long long int)syscall(__NR_gettid));
+
+	pthread_join(th1,&retval);
+	pthread_join(th2,&retval);
+}
+// 运行结果
+./a.out 
+main thread:139713583925056
+thread1:139713575544576
+thread2:139713567151872
+main thread:6890
+thread1 task id:6891
+thread1
+thread2 task id:6892
+thread2
+
+```
+
+
+
+# 结语：
+
+一般使用，其库函数提供的功能已足够了，如果频繁的创建和释放线程可以使用线程池
+
+
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+
