@@ -24,7 +24,82 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 3. 线程可以调用pthread_exit终止自己。
 
-   
+  
+
+在某些时候需要在外部及时的停止线程，这时候就需要pthread_cancel了，看下面的例子
+
+[pthread_cleanup_push()/pthread_cleanup_pop()的详解](https://www.cnblogs.com/guxuanqing/p/8385077.html)
+
+[pthread_cancel 完美退出线程](<https://blog.csdn.net/EastonWoo/article/details/8721782>)
+
+ [pthread_cancel为何无法取消掉一个线程](<https://blog.csdn.net/M_jianjianjiao/article/details/84204482>)
+
+
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/types.h> //gettid
+
+void cleanup(void* buf)
+{
+    printf("call clean\n");
+	if(buf)
+	{
+		free(buf);
+	}
+}
+
+void* func(void *param) 
+{ 
+	printf("sub thread:%lld\n", (long long int)syscall(__NR_gettid));
+
+	char *buf = (char *)malloc(10);
+	pthread_cleanup_push(cleanup, buf);  // 作线程退出时的清理动作
+
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);           //允许退出线程 
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);   //设置立即取消
+	while(1)     
+	{
+		; 
+	} 
+
+	pthread_cleanup_pop(0); // 要和pthread_cleanup_push成对出现 
+							// 参数0表示正常退出时不调用，pthread_cancel或异常退出时才调用
+	return   NULL; 
+} 
+
+int main(int argc, char *argv[]) 
+{ 
+	pthread_t   thrd; 
+	pthread_attr_t   attr; 
+	pthread_attr_init(&attr); 
+	pthread_attr_setdetachstate(&attr,   PTHREAD_CREATE_DETACHED); 
+
+	printf("main thread:%lld\n", (long long int)syscall(__NR_gettid));
+
+	if (pthread_create(&thrd,  &attr, func,  NULL) ) 
+	{ 
+		perror( "pthread_create   error "); 
+		exit(EXIT_FAILURE); 
+	} 
+
+	if (!pthread_cancel(thrd) ) 
+	{
+		printf("pthread_cancel  OK\n"); 
+	} 
+
+	sleep(10); 
+	return 0; 
+} 
+
+```
+
+
 
 # 线程属性
 
@@ -159,7 +234,7 @@ int main()
 	printf("thread1:%lld\n", (long long int)th1);
 	printf("thread2:%lld\n", (long long int)th2);
 
-	printf("main thread:%lld\n", (long long int)syscall(__NR_gettid));
+	 
 
 	pthread_join(th1,&retval);
 	pthread_join(th2,&retval);
