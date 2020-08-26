@@ -1,0 +1,70 @@
+<!---title:onvif_discover虚拟摄像头-->
+<!---keywords:onvif discover, onvif server, 虚拟摄像头-->
+原始引用地址:  [onvif_discover虚拟摄像头](http://yangkuncn.cn/onvif_discover.html)   
+time:  20200824 18:30
+
+## 为什么要做这个虚拟摄像头
+
+做类型nvr产品，在大量测试时，总需要大量视频源，一般情况下需要实体摄像头做视频源。接入实现摄像头时，有些摄像头只能提供一个连接，大量测试时，实体不可能有那么多摄像头。而且我的产品每个需要接入64路，如果实测需要大量的摄像头。所以我需要一个虚拟摄像头。
+
+## 主要功能
+
+本虚拟摄像头软件提供onvif发现功能，rtsp播放功能。其它onvif相关功能可以根据需要自己实现。
+
+rtsp 播放功能由rtsp server提供，后台由live555实现。
+
+onvif发现功能与rtsp server都封闭在虚拟机中，虚拟机下载地址如下：
+
+链接：https://pan.baidu.com/s/1WyttiuG-bU6EoBtRnKjU-A 
+提取码：wzok
+
+使用方式：
+
+解压后，用vmware虚拟机（版本要比vmware15高）打开，进入系统 用户密码为：
+
+```
+user:osee
+passwd:1
+```
+
+连网方式为net,需要更改虚拟机内系统的ip地址：
+
+```
+打开配置文件：vim /etc/netplan/50-cloud-init.yaml，写入以下配置内容：
+network:
+    ethernets:
+        ens33:                  # 配置的网卡名称
+            dhcp4: no           # 关闭dhcp4
+            dhcp6: no           # 关闭dhcp6
+            addresses: [192.168.0.120/24]       # 设置本机IP地址及掩码
+            gateway4: 192.168.0.1               # 设置网关
+            nameservers:
+                    addresses: [114.114.114.114, 8.8.8.8]       # 设置DNS
+    version: 2
+```
+
+**运行netplan apply让更改生效。**
+
+功能如下图：
+
+onvif发现功能
+
+![onvif发现功能](img/onvif_1.png)
+
+
+
+rtsp server
+
+![rtsp server](img/onvif_2.png)
+
+
+
+
+
+
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
+

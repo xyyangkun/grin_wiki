@@ -55,7 +55,7 @@
 
 [海思Hi3519A 进行4k60 h264编码帧率不足的问题](http://yangkuncn.cn/hisi_hi3519a_4k60_h264_enc.html)
 
-
+[onvif_discover虚拟摄像头](http://yangkuncn.cn/onvif_discover.html)
 
 # AI
 
