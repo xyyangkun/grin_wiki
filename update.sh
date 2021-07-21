@@ -1,1 +1,1 @@
-scp -r * root@kvm.yangkuncn.cn:/var/www/html/
+scp -r * root@199.180.255.50:/var/www/html/

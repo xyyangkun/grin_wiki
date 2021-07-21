@@ -1,0 +1,127 @@
+<!---title:rv1126_audio-->
+<!---keywords:rockchip rv1126-->
+原始引用地址:  [rv1126 音频](http://yangkuncn.cn/rv1126_audio.html)   
+time:  202107212128
+
+# 简介
+
+嵌入式中使用音频，常见的有i2s, 做i2s开发，要高清楚这些问题：
+
+mclk 谁提供？
+
+i2s 主从模式
+
+mclk fs  采样率之前的关系。设置了mclk i2s 主从模式后，就可以通过aplay, arecord进行采集和播放音频操作了。
+
+
+
+# rv1126 音频控制
+
+rv1126 时钟是怎么控制的？？
+
+rv1126 声卡的原理
+
+参考：doc/Linux/Multimedia/Rockchip_Developer_guide_Linux_Audio_CN.pdf
+
+I2S分为mclk sclk lrclk datain dataout
+
+查看网卡：
+
+cat /proc/asound/cards
+
+音频配置相关dts:
+
+rv1126-evb-v10.dtsi
+
+代码位置：
+
+Sound/soc/generic/simple-card.c
+
+sound/soc/codecs/dummy-codec.c
+
+rk809代码：
+
+sound/soc/codecs/rk817_codec.c
+
+主从模式例子：
+
+在文档Rockchip RV1109&RV1126TRM V1.0 PART1.PDF  17.3 章节中也有主从模式讲解。 
+
+![i2s主从模式](img/rv1126_audio_master_slave.png)
+
+
+
+![i2s_clk_data](img/rv1126_audio_clk.png)
+
+添加声卡mclk 输出  （dumm 声卡注意主从模式，主从模式没有设置正确会用机关枪的声音）
+
+原理：simple-card.c会生成声卡，调用cpu_dai(rockchip_i2s.c)，和codec_dai(dummy-codec.c)
+
+配置dts,在rongpin/rv1126_1109_common.dtsi 添加:
+
+
+
+![rv1126 audio dummy](img/rv1126_audio_dummy_codec1.png)
+
+在/根中添加声卡：
+
+![rv1126_audio_dummy_codec2.png](img/rv1126_audio_dummy_codec2.png)
+
+添加后查看声卡命令cat /proc/asound/cards：
+
+![rv1126_audio_cat_audio.png](img/rv1126_audio_cat_audio.png)
+
+录音：
+
+arecord -Dhw:1,0 -c2 -r48000 -fS16_LE -d10 /tmp/record.wav
+
+播放：
+
+aplay -D hw:1,0  -fS16_LE  -c2 -r48000 /tmp/record.wav
+
+6911c 音频时钟，主要参数如下：
+
+FS( LRCK):48K                                       (27 IIS_WS)
+
+MCLK =XXX*FS=XXX* sample_rate =256*48K =12.288M
+
+BCLK＝MCLK/4=12.288/4=3.072M         (28 IIS_SCLK)
+
+时钟配置代码：
+
+soc/codecs/dummy-codec.c中rockchip_dummy_codec_probe获取时钟：
+
+dcp->mclk = devm_clk_get(&pdev->dev, "mclk");
+
+dummy_codec_startup函数中应用：
+
+clk_prepare_enable(dcp->mclk);
+
+更底层时钟配置代码位于：
+
+rockchip/clk-rv1126.c
+
+配置mclk输出：
+
+将dummy_codec中的clocks改为：MCLK_I2S1_OUT2IO
+
+![rv1126_audio_mclk_out.png](img/rv1126_audio_mclk_out.png)
+
+配置mclk输入：
+
+![rv1126_audio_mclk_in.png](img/rv1126_audio_mclk_in.png)
+
+主从模式：
+
+主从模式用户态无法调用，是内核驱动配置的。
+
+soc/rockchip/rockchip_i2s.c 中有函数配置主从模式：
+
+rockchip_i2s_set_fmt
+
+soc/generic/simple-card.c asoc_simple_card_hw_params函数在用户太调传递采样率（如48k）fs（如256），时会通过公式mclk=sample*fs=48k*256=12.288M 计算出mclk,可以在这时添加代码配置主从模式, 同时要设置mclk方向：
+
+![rv1126_audio_mclk_in_out.png](img/rv1126_audio_mclk_in_out.png)
+
+[首页](http://yangkuncn.cn/index.html)
+

@@ -1,0 +1,27 @@
+<!---title:linux driver-->
+<!---keywords:填写关键字, 以半角逗号分割-->
+原始引用地址:  [test](http://yangkuncn.cn/linux_dervier.html)   
+time:  2021.7.7
+
+# linux驱动入口
+
+## 简单驱动入口
+
+## i2c驱动入口
+
+## drm bridge 驱动入口
+
+
+
+# dts使用
+
+## dts节点获取
+
+## dts reg获取
+
+## ....
+
+
+
+[首页](http://yangkuncn.cn/index.html)
+
